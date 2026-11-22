@@ -23,14 +23,14 @@ public class HerniMenu extends JPanel {
         JPanel oknoPanel = new JPanel();
         oknoPanel.setLayout(new BoxLayout(oknoPanel, BoxLayout.Y_AXIS));
         oknoPanel.setBackground(new Color(40, 40, 40));
-        oknoPanel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
+        oknoPanel.setBorder(BorderFactory.createEmptyBorder(24, 50, 24, 50));
 
         JLabel nadpis = new JLabel("PAUZA");
         nadpis.setFont(new Font("Segoe UI", Font.BOLD, 36));
         nadpis.setForeground(Color.WHITE);
         nadpis.setAlignmentX(Component.CENTER_ALIGNMENT);
         oknoPanel.add(nadpis);
-        oknoPanel.add(Box.createVerticalStrut(40));
+        oknoPanel.add(Box.createVerticalStrut(20));
 
         JButton btnPokracovat = Menu.vytvorTlacitko("Pokračovat");
         btnPokracovat.addActionListener(e -> setVisible(false));
@@ -66,11 +66,11 @@ public class HerniMenu extends JPanel {
         });
 
         oknoPanel.add(btnPokracovat);
-        oknoPanel.add(Box.createVerticalStrut(20));
+        oknoPanel.add(Box.createVerticalStrut(10));
         oknoPanel.add(btnNastaveni);
-        oknoPanel.add(Box.createVerticalStrut(20));
+        oknoPanel.add(Box.createVerticalStrut(10));
         oknoPanel.add(btnResetZakaznika);
-        oknoPanel.add(Box.createVerticalStrut(20));
+        oknoPanel.add(Box.createVerticalStrut(10));
         oknoPanel.add(btnUlozitOdejit);
 
         add(oknoPanel);

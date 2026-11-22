@@ -169,7 +169,7 @@ public class Menu extends JFrame {
             System.err.println("Chyba při načítání loga: " + e.getMessage());
         }
 
-        menuContainer.add(Box.createVerticalStrut(50));
+        menuContainer.add(Box.createVerticalStrut(30));
 
         String[] texty = {"Začít novou hru", "Načíst hru", "Statistiky", "Nastavení", "Exit"};
         for (String text : texty) {
@@ -195,7 +195,7 @@ public class Menu extends JFrame {
                 }
             });
             menuContainer.add(btn);
-            menuContainer.add(Box.createVerticalStrut(15));
+            menuContainer.add(Box.createVerticalStrut(10));
         }
         panel.add(menuContainer);
         return panel;
@@ -211,14 +211,25 @@ public class Menu extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth(), h = getHeight();
+                // Gradient pozadí
+                Color c1, c2;
                 if (getModel().isPressed()) {
-                    g2.setColor(new Color(40, 40, 40));
+                    c1 = new Color(25, 25, 25);
+                    c2 = new Color(40, 40, 40);
                 } else if (getModel().isRollover()) {
-                    g2.setColor(new Color(70, 70, 70));
+                    c1 = new Color(65, 105, 180);
+                    c2 = new Color(40, 70, 140);
                 } else {
-                    g2.setColor(new Color(50, 50, 50, 220));
+                    c1 = new Color(55, 55, 65);
+                    c2 = new Color(30, 30, 38);
                 }
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                g2.setPaint(new GradientPaint(0, 0, c1, 0, h, c2));
+                g2.fillRoundRect(0, 0, w, h, 12, 12);
+                // Jemný lem
+                g2.setColor(new Color(255, 255, 255, getModel().isRollover() ? 60 : 25));
+                g2.setStroke(new BasicStroke(1f));
+                g2.drawRoundRect(0, 0, w - 1, h - 1, 12, 12);
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -227,12 +238,11 @@ public class Menu extends JFrame {
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setMaximumSize(new Dimension(300, 50));
-        btn.setPreferredSize(new Dimension(300, 50));
+        btn.setMaximumSize(new Dimension(260, 42));
+        btn.setPreferredSize(new Dimension(260, 42));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         return btn;
     }
     class BackgroundPanel extends JPanel {

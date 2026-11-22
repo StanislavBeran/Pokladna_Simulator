@@ -545,6 +545,29 @@ public class PokladnaObrazovka extends JPanel {
             }
         }
     }
+    /**
+     * Zpracuje klávesu přijatou z globálního key bindingu v herní obrazovce.
+     * Číslice a znaky se připíší do numpadDisplay, Backspace maže, Enter potvrdí.
+     */
+    public void zpracujGlobalniKlavesu(char c) {
+        if (numpadDisplay == null) return;
+        if (c == '\n' || c == '\r') {
+            SpravceZvuku.prehraj("kliknuti_na_obrazovku");
+            zpracujVstupZNumpadu();
+        } else if (c == '\b') {
+            SpravceZvuku.prehraj("kliknuti_na_obrazovku");
+            String t = numpadDisplay.getText();
+            if (!t.isEmpty()) numpadDisplay.setText(t.substring(0, t.length() - 1));
+        } else {
+            char vložit = c;
+            if (vložit == '.') vložit = ',';
+            if (Character.isDigit(vložit) || vložit == '*' || vložit == '#' || vložit == ',') {
+                SpravceZvuku.prehraj("kliknuti_na_obrazovku");
+                numpadDisplay.setText(numpadDisplay.getText() + vložit);
+            }
+        }
+    }
+
     public void nastavStavPlatby(boolean zobrazit, int vratit, int vraceno) {
         this.zobrazovatPlatbu = zobrazit;
         this.castkaVratit = vratit;

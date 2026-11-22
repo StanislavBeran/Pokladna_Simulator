@@ -146,7 +146,6 @@ public class SpravcePasu extends JPanel {
     public void odstartujPas() {
         this.velikostNakupu = random.nextInt(5) + 1;
         resetTrpelivost();
-        simulator.vypisDoKonzole("🛒 Nový zákazník! Bude kupovat " + this.velikostNakupu + " položek.");
         if (!pohybTimer.isRunning()) {
             pohybTimer.start();
         }
@@ -318,9 +317,6 @@ public class SpravcePasu extends JPanel {
         aktualniSpawnovanyZakaznik++;
 
         velikostNakupu = random.nextInt(5) + 1;
-        if (simulator != null) {
-            simulator.vypisDoKonzole("🛒 Další zákazník skládá věci na pás (" + velikostNakupu + " položek).");
-        }
     }
 
     private void pohniSPolozkami() {
@@ -413,7 +409,7 @@ public class SpravcePasu extends JPanel {
         if (Math.abs(dx) <= rychlost && Math.abs(dy) <= rychlost) {
             if (p.stav == PolozkaNaPase.Stav.JEDE_NA_SCANNER) {
                 p.stav = PolozkaNaPase.Stav.CEKA_NA_SCANNERU;
-                SpravceZvuku.prehraj("pípnutí_čárového_kódu");
+                SpravceZvuku.prehraj("move");
                 if (simulator != null) simulator.zobrazVahu(p.vaha);
             } else if (p.stav == PolozkaNaPase.Stav.JEDE_DO_ODSTAVNEHO_MISTA) {
                 p.stav = PolozkaNaPase.Stav.V_ODSTAVNEM_MISTE;
@@ -435,7 +431,7 @@ public class SpravcePasu extends JPanel {
                 if (jeSpravne) {
                     int nahodneY = p.getY() + sY(random.nextInt(101) - 50);
                     p.nastavCil(odstavX(), nahodneY, PolozkaNaPase.Stav.JEDE_DO_ODSTAVNEHO_MISTA);
-                    SpravceZvuku.prehraj("pipnuti");
+                    SpravceZvuku.prehraj("move");
                     if (simulator != null) simulator.zobrazVahu(0);
                     return true;
                 }
@@ -443,8 +439,40 @@ public class SpravcePasu extends JPanel {
         }
         return false;
     }
+    /**
+     * SPACE: pošle první skenovanou položku na pásu (nejlevější NA_PASE jeSkenovane)
+     * na scanner — jako kdyby na ni hráč kliknul.
+     */
+    public void zpracujSpaceBar() {
+        if (pauza) return;
+        if (simulator != null && simulator.cekaNaPlatbu()) return;
+
+        // Najdi nejlevější skenovanou položku obsluhovaného zákazníka na pásu
+        PolozkaNaPase cil = null;
+        for (PolozkaNaPase p : aktivniPolozky) {
+            if (p.idZakaznika == obsluhovanyZakaznik
+                    && p.stav == PolozkaNaPase.Stav.NA_PASE
+                    && p.zboziData.jeSkenovane()) {
+                if (cil == null || p.getX() < cil.getX()) cil = p;
+            }
+        }
+        if (cil == null) return;
+
+        int naScanneru = 0;
+        for (PolozkaNaPase q : aktivniPolozky) {
+            if (q.stav == PolozkaNaPase.Stav.JEDE_NA_SCANNER || q.stav == PolozkaNaPase.Stav.CEKA_NA_SCANNERU)
+                naScanneru++;
+        }
+        int kapacita = (simulator != null && simulator.maDruhyScanner()) ? 2 : 1;
+        if (naScanneru < kapacita) {
+            int cilY = scannerY() + (naScanneru * sY(REF_VELIKOST_POLOZKY + 10));
+            cil.nastavCil(scannerX(), cilY, PolozkaNaPase.Stav.JEDE_NA_SCANNER);
+        } else {
+            if (simulator != null) simulator.vypisDoKonzole("Chyba: Scanner je momentálně obsazený!");
+        }
+    }
+
     public void dokonciNakupAZacniNovy() {
-        if (simulator != null) simulator.vypisDoKonzole("✅ Nákup zaplacen.");
         obsluhovanyZakaznik++;
         resetTrpelivost();
         List<PolozkaNaPase> keSmazani = new ArrayList<>();

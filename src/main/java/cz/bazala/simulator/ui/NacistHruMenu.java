@@ -57,53 +57,105 @@ public class NacistHruMenu extends JPanel {
 
 
     private void vykresliAktualniTlacitka() {
-
         tlacitkaContainer.removeAll();
 
         for (int i = 1; i <= 3; i++) {
-            UlozenaHra ulozenaHra = SpravceSouboru.nactiUlozenouHru(i);
+            UlozenaHra hra = SpravceSouboru.nactiUlozenouHru(i);
+            boolean jePrazdny = SpravceSouboru.STAV_PRAZDNY.equals(hra.nazevObchodu)
+                    || SpravceSouboru.STAV_CHYBA.equals(hra.nazevObchodu);
 
-            boolean jePrazdny = SpravceSouboru.STAV_PRAZDNY.equals(ulozenaHra.nazevObchodu)
-                    || SpravceSouboru.STAV_CHYBA.equals(ulozenaHra.nazevObchodu);
-
-            String textTlacitka = jePrazdny
-                    ? ulozenaHra.nazevObchodu
-                    : ulozenaHra.nazevObchodu + " lvl: " + ((ulozenaHra.xp / 100) + 1) + " " + ulozenaHra.pocetPenez + " Kč";
-
-            JButton btnUlozenaHra = Menu.vytvorTlacitko(textTlacitka);
-
-            if (jePrazdny) {
-                btnUlozenaHra.setEnabled(false);
-            } else {
-                final int pozice = i;
-                btnUlozenaHra.addActionListener(e -> {
-                    System.out.println("Načítám hru ze slotu " + pozice);
-                    BazalaSimulator simulator = hlavniOkno.getSimulator();
-                    simulator.nactiPenize(ulozenaHra.pocetPenez);
-                    simulator.nactiXp(ulozenaHra.xp);
-                    simulator.nactiVylepseni(ulozenaHra.vylepseni);
-                    simulator.nactiOdemceneZbozi(ulozenaHra.odemceneZbozi);
-                    simulator.nactiStatistiky(ulozenaHra.celkemObslouzeno, ulozenaHra.nejlepsiKombo,
-                            ulozenaHra.nejlepsiTrzbaSmeny, ulozenaHra.celkemVydelano, ulozenaHra.cisloSmeny);
-                    simulator.nastavDetailyHry(pozice, ulozenaHra.nazevObchodu, ulozenaHra.vybranaHudba, ulozenaHra.odemcenaHudba);
-                    SpravceZvuku.zastav("obchodak_theme_sound");
-                    if (!"Bez hudby".equals(ulozenaHra.vybranaHudba)) {
-                        SpravceZvuku.prehraj("hra_hudba_v_pozadi", ulozenaHra.vybranaHudba, 0, true);
-                    }
-                    hlavniOkno.zobrazObrazovku("BAZALA_SIMULATOR");
-
-
-                    simulator.spustSimulaci();
-                });
-            }
-
-            btnUlozenaHra.setAlignmentX(Component.CENTER_ALIGNMENT);
-            tlacitkaContainer.add(btnUlozenaHra);
+            JPanel karta = vytvorKartuHry(i, hra, jePrazdny);
+            karta.setAlignmentX(Component.CENTER_ALIGNMENT);
+            tlacitkaContainer.add(karta);
             tlacitkaContainer.add(Box.createVerticalStrut(10));
         }
 
         tlacitkaContainer.revalidate();
         tlacitkaContainer.repaint();
+    }
+
+    private JPanel vytvorKartuHry(int slot, UlozenaHra hra, boolean jePrazdny) {
+        JPanel karta = new JPanel(new BorderLayout(12, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setPaint(new GradientPaint(0, 0, new Color(50, 50, 60, 220), 0, getHeight(), new Color(30, 30, 38, 220)));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2.setColor(new Color(255, 255, 255, 30));
+                g2.setStroke(new BasicStroke(1f));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                g2.dispose();
+            }
+        };
+        karta.setOpaque(false);
+        karta.setMaximumSize(new Dimension(480, 72));
+        karta.setPreferredSize(new Dimension(480, 72));
+        karta.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+        karta.setCursor(jePrazdny ? Cursor.getDefaultCursor() : new Cursor(Cursor.HAND_CURSOR));
+
+        if (jePrazdny) {
+            JLabel lbl = new JLabel("Pozice " + slot + " — prázdná");
+            lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            lbl.setForeground(new Color(140, 140, 140));
+            karta.add(lbl, BorderLayout.CENTER);
+        } else {
+            int level = (hra.xp / 100) + 1;
+
+            JPanel levy = new JPanel();
+            levy.setLayout(new BoxLayout(levy, BoxLayout.Y_AXIS));
+            levy.setOpaque(false);
+
+            JLabel lblNazev = new JLabel(hra.nazevObchodu);
+            lblNazev.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            lblNazev.setForeground(Color.WHITE);
+
+            JLabel lblDetail = new JLabel("Směna " + hra.cisloSmeny + "  •  " + hra.pocetPenez + " Kč  •  Level " + level);
+            lblDetail.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblDetail.setForeground(new Color(180, 180, 200));
+
+            levy.add(lblNazev);
+            levy.add(Box.createVerticalStrut(4));
+            levy.add(lblDetail);
+            karta.add(levy, BorderLayout.CENTER);
+
+            JLabel lblSlot = new JLabel("Slot " + slot);
+            lblSlot.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            lblSlot.setForeground(new Color(100, 160, 255));
+            karta.add(lblSlot, BorderLayout.WEST);
+
+            final int pozice = slot;
+            karta.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    BazalaSimulator simulator = hlavniOkno.getSimulator();
+                    simulator.nactiPenize(hra.pocetPenez);
+                    simulator.nactiXp(hra.xp);
+                    simulator.nactiVylepseni(hra.vylepseni);
+                    simulator.nactiOdemceneZbozi(hra.odemceneZbozi);
+                    simulator.nactiStatistiky(hra.celkemObslouzeno, hra.nejlepsiKombo,
+                            hra.nejlepsiTrzbaSmeny, hra.celkemVydelano, hra.cisloSmeny);
+                    simulator.nastavDetailyHry(pozice, hra.nazevObchodu, hra.vybranaHudba, hra.odemcenaHudba);
+                    SpravceZvuku.zastav("obchodak_theme_sound");
+                    if (!"Bez hudby".equals(hra.vybranaHudba)) {
+                        SpravceZvuku.prehraj("hra_hudba_v_pozadi", hra.vybranaHudba, 0, true);
+                    }
+                    hlavniOkno.zobrazObrazovku("BAZALA_SIMULATOR");
+                    simulator.spustSimulaci();
+                }
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    karta.setBackground(new Color(60, 80, 120, 220));
+                    karta.repaint();
+                }
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    karta.repaint();
+                }
+            });
+        }
+
+        return karta;
     }
 
 

@@ -1,31 +1,18 @@
 package cz.bazala.simulator.ui;
 
-import cz.bazala.simulator.model.*;
-import cz.bazala.simulator.io.*;
-
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class HerniPanel extends JPanel {
-    public enum Typ { PENIZE, XP, KONZOLE }
+    public enum Typ { PENIZE, XP }
 
     private Image bgImage;
-    private Typ typPanelu;
+    private final Typ typPanelu;
 
     private int penize = 0;
     private int xp = 0;
     private int maxXp = 100;
     private int level = 1;
-
-    // Seznam zpráv pro Konzoli
-    private List<String> zpravy = new ArrayList<>();
-
-    // Průběh aktuální směny (zobrazeno v hlavičce konzole).
-    private int smenaCislo = 1;
-    private int smenaTrzba = 0;
-    private int smenaCil = 0;
 
     public HerniPanel(Typ typPanelu) {
         this.typPanelu = typPanelu;
@@ -53,22 +40,6 @@ public class HerniPanel extends JPanel {
         repaint();
     }
 
-    public void pridejZpravu(String zprava) {
-        zpravy.add(zprava);
-        if (zpravy.size() > 4) {
-            zpravy.remove(0);
-        }
-        repaint();
-    }
-
-    /** Nastaví průběh aktuální směny zobrazovaný v hlavičce konzole. */
-    public void nastavSmena(int cislo, int trzba, int cil) {
-        this.smenaCislo = cislo;
-        this.smenaTrzba = trzba;
-        this.smenaCil = cil;
-        repaint();
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -79,11 +50,10 @@ public class HerniPanel extends JPanel {
             g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), this);
         }
 
-        FontMetrics fm;
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        FontMetrics fm = g2.getFontMetrics();
 
         if (typPanelu == Typ.PENIZE) {
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 18));
-            fm = g2.getFontMetrics();
             String text = penize + " Kč";
             int textX = (getWidth() - fm.stringWidth(text)) / 2;
             int textY = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
@@ -91,8 +61,6 @@ public class HerniPanel extends JPanel {
             g2.drawString(text, textX, textY);
 
         } else if (typPanelu == Typ.XP) {
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 18));
-            fm = g2.getFontMetrics();
             int okrajX = 12;
             int okrajY = 15;
             int vnitrniSirka = getWidth() - (2 * okrajX);
@@ -109,28 +77,6 @@ public class HerniPanel extends JPanel {
             g2.drawString(text, textX + 1, textY + 1);
             g2.setColor(Color.WHITE);
             g2.drawString(text, textX, textY);
-
-        } else if (typPanelu == Typ.KONZOLE) {
-            g2.setFont(new Font("Monospaced", Font.BOLD, 10));
-            int y = 25;
-
-            // Hlavička: průběh směny (cíl tržby).
-            if (smenaCil > 0) {
-                g2.setColor(new Color(255, 215, 0));
-                String smenaText = "Směna " + smenaCislo + ": " + smenaTrzba + " / " + smenaCil + " Kč";
-                g2.drawString(smenaText, 20, y);
-                y += 20;
-            }
-
-            for (String zprava : zpravy) {
-                if(zprava.contains("Chyba")){
-                    g2.setColor(Color.red);
-                }else{
-                    g2.setColor(new Color(180, 255, 180));
-                }
-                g2.drawString("> " + zprava, 20, y);
-                y += 20;
-            }
         }
     }
 }

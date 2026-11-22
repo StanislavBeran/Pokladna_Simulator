@@ -24,7 +24,7 @@ public class ObchodMenu extends JPanel {
 
         JPanel oknoPanel = new JPanel(new BorderLayout());
         oknoPanel.setBackground(Color.WHITE);
-        oknoPanel.setPreferredSize(new Dimension(850, 550));
+        oknoPanel.setPreferredSize(new Dimension(950, 560));
         oknoPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
 
         // --- HLAVIČKA ---
@@ -44,7 +44,7 @@ public class ObchodMenu extends JPanel {
         oknoPanel.add(hlavicka, BorderLayout.NORTH);
 
         // --- TĚLO OBCHODU ---
-        seznamVylepseni = new JPanel(new GridLayout(0, 4, 10, 10)); // 4 sloupce
+        seznamVylepseni = new JPanel(new GridLayout(0, 4, 10, 10)); // 4 sloupce pro zboží/hudbu
         seznamVylepseni.setBackground(Color.WHITE);
 
         JPanel obalovaciPanel = new JPanel(new BorderLayout());
@@ -68,7 +68,7 @@ public class ObchodMenu extends JPanel {
         infoPanel.add(lblPenizeInfo);
         paticka.add(infoPanel, BorderLayout.WEST);
         if (simulator != null && isVisible()) {
-            lblPenizeInfo.setText("Peníze: " + simulator.getAktualniPenize() + " Kč | Level: " + simulator.getLevel());
+            lblPenizeInfo.setText("Peníze: " + simulator.getAktualniPenize() + " Kč");
         }
         JButton btnZavrit = new JButton("Zpět");
         btnZavrit.setFont(new Font("Arial", Font.BOLD, 16));
@@ -101,6 +101,12 @@ public class ObchodMenu extends JPanel {
 
     public void aktualizujNabidku() {
         seznamVylepseni.removeAll();
+        // Layout závisí na kategorii — reset na začátku každého volání
+        if (aktualniKategorie == 2) {
+            seznamVylepseni.setLayout(new GridLayout(1, 5, 10, 10));
+        } else {
+            seznamVylepseni.setLayout(new GridLayout(0, 4, 10, 10));
+        }
 
         if (aktualniKategorie == 1) {
             List<Zbozi> zbozi = simulator.getZboziList();
@@ -111,7 +117,9 @@ public class ObchodMenu extends JPanel {
 
                     boolean vlastni = simulator.getOdemceneZbozi().contains(z.id);
                     int cenaOdemknuti = vypocitejCenuOdemknuti(z);
-                    boolean maPenizeALevel = simulator.getAktualniPenize() >= cenaOdemknuti && simulator.getLevel() >= z.lvlOdemknuti;
+                    // lvlOdemknuti je nyní číslo směny od které je zboží dostupné
+                    boolean maPenizeASmenu = simulator.getAktualniPenize() >= cenaOdemknuti
+                            && simulator.getCisloSmeny() >= z.lvlOdemknuti;
 
                     JPanel polozka = new JPanel(new BorderLayout());
                     polozka.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
@@ -139,7 +147,7 @@ public class ObchodMenu extends JPanel {
                     }
 
                     String mnozstviText = (z.minVaha > 0) ? "Váha: " + z.minVaha + "-" + z.maxVaha + " g" : "Max kusů: " + z.maxPocet;
-                    String upozorneniLevel = (!vlastni && simulator.getLevel() < z.lvlOdemknuti) ? "<font color='red'>" : "";
+                    String upozorneniSmenu = (!vlastni && simulator.getCisloSmeny() < z.lvlOdemknuti) ? "<font color='red'>" : "";
 
                     String cistyNazev = z.nazev.replace('_', ' ');
                     int velikostPisma = cistyNazev.length() > 15 ? 11 : 14;
@@ -148,7 +156,7 @@ public class ObchodMenu extends JPanel {
                             + "<b style='font-size:" + velikostPisma + "px;'>" + cistyNazev + "</b><br>"
                             + "<i style='font-size:10px;'>" + getTypText(z.typ) + "</i><br><br>"
                             + "<span style='font-size:11px;'>" + mnozstviText + "</span><br>"
-                            + upozorneniLevel + "<span style='font-size:11px;'>Od levelu: " + z.lvlOdemknuti + "</span>" + (upozorneniLevel.isEmpty() ? "" : "</font>") + "<br>"
+                            + upozorneniSmenu + "<span style='font-size:11px;'>Od směny: " + z.lvlOdemknuti + "</span>" + (upozorneniSmenu.isEmpty() ? "" : "</font>") + "<br>"
                             + "<span style='font-size:11px;'>Prodej za: " + z.cena + " Kč</span><br><br>"
                             + "<b style='font-size:16px; color:#1a5276;'>" + (vlastni ? "ZAKOUPENO" : (simulator.getAktualniPenize()>=cenaOdemknuti ? cenaOdemknuti : "<font color='red'>" + cenaOdemknuti) + " Kč") + "</b>"
                             + "</div></html>";
@@ -168,7 +176,7 @@ public class ObchodMenu extends JPanel {
                         btnKoupit.setEnabled(false);
                         btnKoupit.setBackground(new Color(150, 220, 150));
                     } else {
-                        btnKoupit.setEnabled(maPenizeALevel);
+                        btnKoupit.setEnabled(maPenizeASmenu);
                         btnKoupit.addActionListener(e -> {
                             simulator.odectiPenize(cenaOdemknuti);
                             simulator.odemkniZbozi(z.id);
