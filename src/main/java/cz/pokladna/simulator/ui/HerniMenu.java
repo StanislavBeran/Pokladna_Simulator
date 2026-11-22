@@ -1,0 +1,94 @@
+package cz.pokladna.simulator.ui;
+
+import cz.pokladna.simulator.model.*;
+import cz.pokladna.simulator.io.*;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+
+public class HerniMenu extends JPanel {
+    private BazalaSimulator simulator;
+    private Menu hlavniOkno;
+
+    public HerniMenu(BazalaSimulator simulator, Menu hlavniOkno) {
+        this.simulator = simulator;
+        this.hlavniOkno = hlavniOkno;
+
+        setLayout(new GridBagLayout());
+        setOpaque(false);
+
+        addMouseListener(new MouseAdapter() {});
+
+        JPanel oknoPanel = new JPanel();
+        oknoPanel.setLayout(new BoxLayout(oknoPanel, BoxLayout.Y_AXIS));
+        oknoPanel.setBackground(new Color(40, 40, 40));
+        oknoPanel.setBorder(BorderFactory.createEmptyBorder(24, 50, 24, 50));
+
+        JLabel nadpis = new JLabel("PAUZA");
+        nadpis.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        nadpis.setForeground(Color.WHITE);
+        nadpis.setAlignmentX(Component.CENTER_ALIGNMENT);
+        oknoPanel.add(nadpis);
+        oknoPanel.add(Box.createVerticalStrut(20));
+
+        JButton btnPokracovat = Menu.vytvorTlacitko("Pokračovat");
+        btnPokracovat.addActionListener(e -> setVisible(false));
+
+        JButton btnNastaveni = Menu.vytvorTlacitko("Nastavení");
+        btnNastaveni.addActionListener(e -> {
+            hlavniOkno.setPredchoziObrazovka("BAZALA_SIMULATOR");
+            hlavniOkno.zobrazObrazovku("NASTAVENI");
+        });
+
+        JButton btnResetZakaznika = Menu.vytvorTlacitko("Reset zákazníka");
+        btnResetZakaznika.addActionListener(e -> {
+            int volba = JOptionPane.showConfirmDialog(
+                    this,
+                    "Resetovat aktuálního zákazníka? Rozdělaný nákup se zahodí.\nPeníze a XP zůstanou zachovány.",
+                    "Reset zákazníka",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+            if (volba == JOptionPane.YES_OPTION) {
+                simulator.resetujZakaznika();
+                setVisible(false);
+            }
+        });
+
+        JButton btnUlozitOdejit = Menu.vytvorTlacitko("Uložit a odejít");
+        btnUlozitOdejit.addActionListener(e -> {
+            simulator.ulozHru();
+            simulator.resetujHerniPole();
+            setVisible(false);
+            SpravceZvuku.zastavVsechnuHudbu();
+            SpravceZvuku.prehraj("obchodak_theme_sound", "zvuk_v_pozadi", 0, true);
+            hlavniOkno.zobrazObrazovku("HLAVNI_MENU");
+        });
+
+        oknoPanel.add(btnPokracovat);
+        oknoPanel.add(Box.createVerticalStrut(10));
+        oknoPanel.add(btnNastaveni);
+        oknoPanel.add(Box.createVerticalStrut(10));
+        oknoPanel.add(btnResetZakaznika);
+        oknoPanel.add(Box.createVerticalStrut(10));
+        oknoPanel.add(btnUlozitOdejit);
+
+        add(oknoPanel);
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+         if (simulator != null) {
+            if (visible) simulator.pozastavHru();
+            else simulator.obnovHru();
+        }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        g.setColor(new Color(0, 0, 0, 200));
+        g.fillRect(0, 0, getWidth(), getHeight());
+        super.paintComponent(g);
+    }
+}

@@ -1,0 +1,235 @@
+package cz.pokladna.simulator.io;
+
+import cz.pokladna.simulator.model.UlozenaHra;
+import cz.pokladna.simulator.model.Zbozi;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SpravceSouboru {
+
+    public static final String STAV_PRAZDNY = "Prázdná pozice";
+    public static final String STAV_CHYBA = "Chyba při čtení";
+
+    private static final File SLOZKA_ULOZENYCH_HER = new File("ulozeneHry");
+
+    private static final String STARA_SLOZKA = "src/main/resources/ulozeneHry/";
+
+    public static final int MAX_DELKA_JMENA = 30;
+
+    public static String ocistiJmeno(String jmeno) {
+        if (jmeno == null) return "Obchod";
+        String vysledek = jmeno.replaceAll("[\";:\\r\\n]", "").trim();
+        if (vysledek.length() > MAX_DELKA_JMENA) {
+            vysledek = vysledek.substring(0, MAX_DELKA_JMENA).trim();
+        }
+        return vysledek.isEmpty() ? "Obchod" : vysledek;
+    }
+
+    private static File souborProSlot(int slot) {
+        return new File(SLOZKA_ULOZENYCH_HER, "ulozenaHra" + slot + ".txt");
+    }
+
+    public static UlozenaHra nactiUlozenouHru(int slot) {
+        File novy = souborProSlot(slot);
+        if (novy.exists() && novy.length() > 0) {
+            return nactiUlozeneHryZeSouboru(novy.getPath());
+        }
+        return nactiUlozeneHryZeSouboru(STARA_SLOZKA + "ulozenaHra" + slot + ".txt");
+    }
+
+    public static UlozenaHra nactiUlozeneHryZeSouboru(String cesta) {
+        File soubor = new File(cesta);
+        if (!soubor.exists() || soubor.length() == 0) {
+            return new UlozenaHra(STAV_PRAZDNY, 0, 0, "00000", null, "obchod_theme", new ArrayList<>(List.of("obchod_theme")));
+        }
+
+        String jmenoObchodu = "Neznámé";
+        int penize = 0;
+        int xp = 0;
+        String vylepseni = "00000";
+        ArrayList<Integer> odemceneZbozi = new ArrayList<>();
+        String vybranaHudba = "obchod_theme";
+        List<String> odemcenaHudba = new ArrayList<>();
+        int celkemObslouzeno = 0;
+        int nejlepsiKombo = 0;
+        int nejlepsiTrzbaSmeny = 0;
+        int celkemVydelano = 0;
+        int cisloSmeny = 1;
+
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new FileInputStream(soubor), StandardCharsets.UTF_8))) {
+            String radek;
+            while ((radek = br.readLine()) != null) {
+                if (radek.trim().isEmpty()) continue;
+                if (radek.contains(":")) {
+                    String hodnota = radek.substring(radek.indexOf(":") + 1).replace(";", "").trim();
+
+                    if (hodnota.startsWith("\"") && hodnota.endsWith("\"")) {
+                        hodnota = hodnota.substring(1, hodnota.length() - 1);
+                    }
+
+                    try {
+                        if (radek.startsWith("Jmeno")) {
+                            jmenoObchodu = hodnota;
+                        } else if (radek.startsWith("Penize")) {
+                            penize = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("XP")) {
+                            xp = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("Vylepseni")) {
+                            vylepseni = hodnota;
+                        } else if (radek.startsWith("OdemceneZbozi")) {
+                            String[] ids = hodnota.split(",");
+                            for (String id : ids) {
+                                if (id.trim().isEmpty()) continue;
+                                try {
+                                    odemceneZbozi.add(Integer.parseInt(id.trim()));
+                                } catch (NumberFormatException e) {
+                                    System.err.println("Přeskakuji neplatné ID zboží v uložené hře (" + cesta + "): " + id.trim());
+                                }
+                            }
+                        } else if (radek.startsWith("VybranaHudba")) {
+                            vybranaHudba = hodnota;
+                        } else if (radek.startsWith("OdemcenaHudba")) {
+                            String[] hudby = hodnota.split(",");
+                            for (String h : hudby) {
+                                if (!h.trim().isEmpty()) odemcenaHudba.add(h.trim());
+                            }
+                        } else if (radek.startsWith("CelkemObslouzeno")) {
+                            celkemObslouzeno = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("NejlepsiKombo")) {
+                            nejlepsiKombo = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("NejlepsiTrzbaSmeny")) {
+                            nejlepsiTrzbaSmeny = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("CelkemVydelano")) {
+                            celkemVydelano = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("CisloSmeny")) {
+                            cisloSmeny = Integer.parseInt(hodnota);
+                        }
+                    } catch (NumberFormatException e) {
+                        System.err.println("Přeskakuji poškozený řádek v uložené hře (" + cesta + "): " + radek);
+                    }
+                }
+            }
+            UlozenaHra vysledek = new UlozenaHra(jmenoObchodu, penize, xp, vylepseni, odemceneZbozi, vybranaHudba, odemcenaHudba);
+            vysledek.celkemObslouzeno = celkemObslouzeno;
+            vysledek.nejlepsiKombo = nejlepsiKombo;
+            vysledek.nejlepsiTrzbaSmeny = nejlepsiTrzbaSmeny;
+            vysledek.celkemVydelano = celkemVydelano;
+            vysledek.cisloSmeny = cisloSmeny;
+            return vysledek;
+        } catch (IOException e) {
+            System.err.println("Chyba při čtení uložené hry (" + cesta + "): " + e.getMessage());
+            return new UlozenaHra(STAV_CHYBA, 0, 0, "00000", null, "obchod_theme", null);
+        }
+    }
+
+    public static void ulozHruDoSouboru(int slot, String jmeno, String penize, int xp, String vylepseni, List<Integer> odemceneZbozi, String vybranaHudba, List<String> odemcenaHudba) {
+        ulozHruDoSouboru(slot, jmeno, penize, xp, vylepseni, odemceneZbozi, vybranaHudba, odemcenaHudba,
+                0, 0, 0, 0, 1);
+    }
+
+    public static void ulozHruDoSouboru(int slot, String jmeno, String penize, int xp, String vylepseni,
+                                        List<Integer> odemceneZbozi, String vybranaHudba, List<String> odemcenaHudba,
+                                        int celkemObslouzeno, int nejlepsiKombo, int nejlepsiTrzbaSmeny,
+                                        int celkemVydelano, int cisloSmeny) {
+        if (odemceneZbozi == null) {
+            odemceneZbozi = new ArrayList<>();
+            odemceneZbozi.add(16);
+        }
+        if (!SLOZKA_ULOZENYCH_HER.exists() && !SLOZKA_ULOZENYCH_HER.mkdirs()) {
+            System.err.println("Nepodařilo se vytvořit složku pro uložené hry: " + SLOZKA_ULOZENYCH_HER.getAbsolutePath());
+            return;
+        }
+        File soubor = souborProSlot(slot);
+        try (PrintWriter writer = new PrintWriter(
+                new OutputStreamWriter(new FileOutputStream(soubor), StandardCharsets.UTF_8))) {
+            writer.println("Jmeno: \"" + ocistiJmeno(jmeno) + "\";");
+            writer.println("Penize: " + penize + ";");
+            writer.println("XP: " + xp + ";");
+            writer.println("Vylepseni: " + vylepseni + ";");
+
+            StringBuilder odemceneZboziText = new StringBuilder();
+            for (int i = 0; i < odemceneZbozi.size(); i++) {
+                odemceneZboziText.append(odemceneZbozi.get(i));
+                if (i != odemceneZbozi.size() - 1) odemceneZboziText.append(",");
+            }
+            writer.println("OdemceneZbozi: " + odemceneZboziText + ";");
+            writer.println("VybranaHudba: " + vybranaHudba + ";");
+
+            String odemcenaHudbaText = (odemcenaHudba == null) ? "" : String.join(",", odemcenaHudba);
+            writer.println("OdemcenaHudba: " + odemcenaHudbaText + ";");
+
+            writer.println("CelkemObslouzeno: " + celkemObslouzeno + ";");
+            writer.println("NejlepsiKombo: " + nejlepsiKombo + ";");
+            writer.println("NejlepsiTrzbaSmeny: " + nejlepsiTrzbaSmeny + ";");
+            writer.println("CelkemVydelano: " + celkemVydelano + ";");
+            writer.println("CisloSmeny: " + cisloSmeny + ";");
+
+            System.out.println("Hra uložena do slotu: " + slot);
+        } catch (IOException ex) {
+            System.err.println("Chyba při ukládání hry do slotu " + slot + ": " + ex.getMessage());
+        }
+    }
+
+    public static List<Zbozi> nactiZbozi() {
+        File diskovyOverride = new File("src/main/resources/zbozi.txt");
+        if (diskovyOverride.exists() && diskovyOverride.length() > 0) {
+            return nactiZboziZeStreamu(() -> new FileInputStream(diskovyOverride), diskovyOverride.getPath());
+        }
+        return nactiZboziZClasspath();
+    }
+
+    private static List<Zbozi> nactiZboziZClasspath() {
+        InputStream is = SpravceSouboru.class.getResourceAsStream("/zbozi.txt");
+        if (is == null) {
+            throw new IllegalStateException("Nenačetlo se zboží: soubor zbozi.txt nebyl nalezen na disku ani v classpath.");
+        }
+        return nactiZboziZeStreamu(() -> is, "classpath:/zbozi.txt");
+    }
+
+    private interface DodavatelStreamu {
+        InputStream otevri() throws IOException;
+    }
+
+    private static List<Zbozi> nactiZboziZeStreamu(DodavatelStreamu dodavatel, String popisZdroje) {
+        List<Zbozi> zboziVsechny = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(dodavatel.otevri(), StandardCharsets.UTF_8))) {
+            String radek;
+            while ((radek = br.readLine()) != null) {
+                if (radek.trim().isEmpty()) continue;
+                if (radek.contains(";")) {
+                    String[] slova = radek.split(";");
+                    if (slova.length >= 9) {
+                        Zbozi zbozi = new Zbozi(
+                                slova[0].trim(),
+                                Integer.parseInt(slova[1].trim()),
+                                Integer.parseInt(slova[2].trim()),
+                                Integer.parseInt(slova[3].trim()),
+                                Integer.parseInt(slova[4].trim()),
+                                Integer.parseInt(slova[5].trim()),
+                                Integer.parseInt(slova[6].trim()),
+                                Integer.parseInt(slova[7].trim()),
+                                slova[8].trim()
+                        );
+                        zboziVsechny.add(zbozi);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Chyba při čtení zboží (" + popisZdroje + "): " + e.getMessage());
+        }
+
+        if (zboziVsechny.isEmpty()) {
+            System.out.println("Seznam zboží je prázdný, žádné platné řádky nebyly nalezeny.");
+        } else {
+            System.out.println("Načteno " + zboziVsechny.size() + " položek zboží ze zdroje: " + popisZdroje);
+        }
+
+        return zboziVsechny;
+    }
+}

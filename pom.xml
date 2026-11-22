@@ -11,7 +11,7 @@
     <properties>
         <maven.compiler.release>16</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mainClass>cz.bazala.simulator.ui.Menu</mainClass>
+        <mainClass>cz.pokladna.simulator.ui.Menu</mainClass>
         <junit.version>5.10.2</junit.version>
     </properties>
 
