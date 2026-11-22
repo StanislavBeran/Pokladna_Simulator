@@ -27,7 +27,6 @@ public class ObchodMenu extends JPanel {
         oknoPanel.setPreferredSize(new Dimension(950, 560));
         oknoPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
 
-        // --- HLAVIČKA ---
         JPanel hlavicka = new JPanel(new BorderLayout());
         JPanel kategorie = new JPanel(new GridLayout(1, 3, 1, 1));
         kategorie.setBackground(Color.BLACK);
@@ -43,7 +42,6 @@ public class ObchodMenu extends JPanel {
         hlavicka.add(nadpis, BorderLayout.SOUTH);
         oknoPanel.add(hlavicka, BorderLayout.NORTH);
 
-        // --- TĚLO OBCHODU ---
         seznamVylepseni = new JPanel(new GridLayout(0, 4, 10, 10)); // 4 sloupce pro zboží/hudbu
         seznamVylepseni.setBackground(Color.WHITE);
 
@@ -85,7 +83,6 @@ public class ObchodMenu extends JPanel {
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        // Otevřený obchod zastaví pás, zavření ho obnoví.
         if (simulator != null) {
             if (visible) simulator.pozastavHru();
             else simulator.obnovHru();
@@ -101,7 +98,6 @@ public class ObchodMenu extends JPanel {
 
     public void aktualizujNabidku() {
         seznamVylepseni.removeAll();
-        // Layout závisí na kategorii — reset na začátku každého volání
         if (aktualniKategorie == 2) {
             seznamVylepseni.setLayout(new GridLayout(1, 5, 10, 10));
         } else {
@@ -117,7 +113,6 @@ public class ObchodMenu extends JPanel {
 
                     boolean vlastni = simulator.getOdemceneZbozi().contains(z.id);
                     int cenaOdemknuti = vypocitejCenuOdemknuti(z);
-                    // lvlOdemknuti je nyní číslo směny od které je zboží dostupné
                     boolean maPenizeASmenu = simulator.getAktualniPenize() >= cenaOdemknuti
                             && simulator.getCisloSmeny() >= z.lvlOdemknuti;
 
@@ -327,7 +322,6 @@ public class ObchodMenu extends JPanel {
         polozka.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
         polozka.setBackground(jeMax ? new Color(255, 235, 150) : Color.WHITE);
 
-        // Přepínatelná vylepšení (max úroveň 1) ukazují Zap/Vyp místo úrovně.
         String urovenText = (v.maxUroven == 1)
                 ? (jeMax ? "Stav: ZAPNUTO" : "Stav: vypnuto")
                 : ("Úroveň: " + uroven + " / " + v.maxUroven);

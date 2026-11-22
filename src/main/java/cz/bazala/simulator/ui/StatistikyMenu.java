@@ -69,7 +69,6 @@ public class StatistikyMenu extends JPanel {
 
     private JPanel vytvorKartu(int slot, UlozenaHra hra, boolean prazdny) {
 
-        // Vlastní panel kreslený přes paintComponent — žádný HTML, žádný JLabel.
         JPanel karta = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -81,17 +80,14 @@ public class StatistikyMenu extends JPanel {
                 int w = getWidth(), h = getHeight();
                 int roh = 12;
 
-                // Pozadí s gradientem
                 g2.setPaint(new GradientPaint(0, 0, new Color(52, 52, 62, 240), 0, h, new Color(32, 32, 42, 240)));
                 g2.fill(new RoundRectangle2D.Float(0, 0, w, h, roh, roh));
 
-                // Barevný levý pruh
                 Color akcent = prazdny ? new Color(80, 80, 90) : new Color(50, 130, 255);
                 g2.setColor(akcent);
                 g2.fill(new RoundRectangle2D.Float(0, 0, 6, h, roh, roh));
                 g2.fillRect(3, 0, 3, h);
 
-                // Lem
                 g2.setColor(new Color(255, 255, 255, 25));
                 g2.setStroke(new BasicStroke(1f));
                 g2.draw(new RoundRectangle2D.Float(0, 0, w - 1, h - 1, roh, roh));
@@ -107,39 +103,33 @@ public class StatistikyMenu extends JPanel {
                     int px = 20;
                     int py = 18;
 
-                    // Číslo slotu
                     g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
                     g2.setColor(new Color(80, 150, 255));
                     g2.drawString("SLOT " + slot, px, py);
                     py += 2;
 
-                    // Název obchodu
                     g2.setFont(new Font("Segoe UI", Font.BOLD, 17));
                     g2.setColor(Color.WHITE);
                     FontMetrics fmN = g2.getFontMetrics();
-                    // Ořízneme dynamicky podle dostupné šířky
                     String nazev = hra.nazevObchodu;
-                    int maxW = w - px - 110; // místo pro "level X" vpravo
+                    int maxW = w - px - 110;
                     while (nazev.length() > 2 && fmN.stringWidth(nazev) > maxW) {
                         nazev = nazev.substring(0, nazev.length() - 2) + "…";
                     }
                     py += fmN.getAscent() + 2;
                     g2.drawString(nazev, px, py);
 
-                    // Level vpravo
                     g2.setFont(new Font("Segoe UI", Font.BOLD, 13));
                     g2.setColor(new Color(255, 213, 74));
                     String lvlTxt = "Level " + level;
                     FontMetrics fmL = g2.getFontMetrics();
                     g2.drawString(lvlTxt, w - fmL.stringWidth(lvlTxt) - 14, py);
 
-                    // Dělicí čára
                     py += 7;
                     g2.setColor(new Color(255, 255, 255, 30));
                     g2.drawLine(px, py, w - px, py);
                     py += 11;
 
-                    // Statistiky ve dvou sloupcích
                     g2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                     FontMetrics fmS = g2.getFontMetrics();
                     int radekV = fmS.getHeight() + 3;
@@ -157,13 +147,11 @@ public class StatistikyMenu extends JPanel {
                 g2.dispose();
             }
 
-            // Pomocná: kreslí "popis: hodnota" v daném prostoru
             private void polozka(Graphics2D g2, FontMetrics fm, String popis, String hodnota, int x, int y, int maxW) {
                 g2.setColor(new Color(160, 160, 175));
                 g2.drawString(popis + ": ", x, y);
                 int offX = x + fm.stringWidth(popis + ": ");
                 g2.setColor(Color.WHITE);
-                // Zkrátíme hodnotu pokud by přetekla
                 String val = hodnota;
                 while (val.length() > 1 && offX + fm.stringWidth(val) > x + maxW) {
                     val = val.substring(0, val.length() - 2) + "…";

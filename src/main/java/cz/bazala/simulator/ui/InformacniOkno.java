@@ -13,17 +13,15 @@ public class InformacniOkno extends JPanel {
     public InformacniOkno(Runnable akcePoZavreni) {
         this.akcePoZavreni = akcePoZavreni;
         setLayout(new GridBagLayout());
-        setBackground(new Color(0, 0, 0, 180)); // Poloprůhledné černé pozadí
+        setBackground(new Color(0, 0, 0, 180));
 
         addMouseListener(new MouseAdapter() {});
 
-        // --- VNITŘNÍ BOX S NÁVODEM ---
         JPanel oknoPanel = new JPanel();
         oknoPanel.setLayout(new BoxLayout(oknoPanel, BoxLayout.Y_AXIS));
         oknoPanel.setBackground(new Color(40, 40, 40));
         oknoPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
-        // Nápis
         JLabel nadpis = new JLabel("Vítej v Bazala Simulatoru!");
         nadpis.setFont(new Font("Segoe UI", Font.BOLD, 28));
         nadpis.setForeground(Color.WHITE);
@@ -31,7 +29,6 @@ public class InformacniOkno extends JPanel {
         oknoPanel.add(nadpis);
         oknoPanel.add(Box.createVerticalStrut(20));
 
-        // Text návodu
         String navod = "<html><div style='text-align: left; width: 400px;'>" +
                 "Tady je rychlý návod jak zmáknout směnu jak Bazala:<br><br>" +
                 "1. Zboží na pásu <b>S kódem (typ 0)</b> stačí pouze kliknout a máš vyřešíno.<br>" +
@@ -50,7 +47,6 @@ public class InformacniOkno extends JPanel {
         oknoPanel.add(textLabel);
         oknoPanel.add(Box.createVerticalStrut(30));
 
-        // Tlačítko pro start
         JButton btnZavrit = new JButton("Rozumím, jdeme na to!") {
             @Override
             protected void paintComponent(Graphics g) {

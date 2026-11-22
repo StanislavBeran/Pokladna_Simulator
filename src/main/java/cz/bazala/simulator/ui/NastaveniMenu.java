@@ -23,7 +23,6 @@ public class NastaveniMenu extends JPanel {
     private BazalaSimulator simulator;
     private boolean nacitaniDat = false;
 
-    // Barvy pro custom slider
     private static final Color SL_BG    = new Color(35, 35, 45, 220);
     private static final Color SL_FILL  = new Color(50, 130, 255);
     private static final Color SL_THUMB = new Color(255, 255, 255);
@@ -47,13 +46,11 @@ public class NastaveniMenu extends JPanel {
         mainContainer.add(nadpis);
         mainContainer.add(Box.createVerticalStrut(20));
 
-        // ── Hlasitost ──────────────────────────────────────────────────────
         addLabel(mainContainer, "Hlasitost hudby a zvuků:");
         mainContainer.add(Box.createVerticalStrut(6));
         mainContainer.add(vytvorSlider());
         mainContainer.add(Box.createVerticalStrut(16));
 
-        // ── Hudba ──────────────────────────────────────────────────────────
         addLabel(mainContainer, "Hudba:");
         mainContainer.add(Box.createVerticalStrut(6));
         hudbaComboBox = vytvorComboBox();
@@ -86,7 +83,6 @@ public class NastaveniMenu extends JPanel {
         mainContainer.add(hudbaComboBox);
         mainContainer.add(Box.createVerticalStrut(16));
 
-        // ── Rozlišení ──────────────────────────────────────────────────────
         addLabel(mainContainer, "Rozlišení:");
         mainContainer.add(Box.createVerticalStrut(6));
         rozliseniComboBox = vytvorComboBox();
@@ -117,8 +113,6 @@ public class NastaveniMenu extends JPanel {
         });
     }
 
-    // ── Pomocné továrny ────────────────────────────────────────────────────
-
     private void addLabel(JPanel parent, String text) {
         JLabel lbl = new JLabel(text);
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 15));
@@ -127,7 +121,6 @@ public class NastaveniMenu extends JPanel {
         parent.add(lbl);
     }
 
-    /** Vlastní kreslený slider — bez výchozího Swing vzhledu. */
     private JPanel vytvorSlider() {
         sliderPanel = new JPanel() {
             private boolean tazeni = false;
@@ -173,17 +166,14 @@ public class NastaveniMenu extends JPanel {
                 int thumbX = barX + fillW;
                 int thumbR = 10;
 
-                // Pozadí drážky
                 g2.setColor(new Color(30, 30, 40, 200));
                 g2.fillRoundRect(barX, barY, barW, barH, barH, barH);
 
-                // Výplň
                 if (fillW > 0) {
                     g2.setColor(SL_FILL);
                     g2.fillRoundRect(barX, barY, fillW, barH, barH, barH);
                 }
 
-                // Palec (thumb)
                 g2.setColor(new Color(0, 0, 0, 60));
                 g2.fillOval(thumbX - thumbR + 1, h / 2 - thumbR + 2, thumbR * 2, thumbR * 2);
                 g2.setColor(SL_THUMB);
@@ -192,7 +182,6 @@ public class NastaveniMenu extends JPanel {
                 g2.setStroke(new BasicStroke(2f));
                 g2.drawOval(thumbX - thumbR, h / 2 - thumbR, thumbR * 2 - 1, thumbR * 2 - 1);
 
-                // Hodnota
                 g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
                 g2.setColor(SL_TEXT);
                 String val = sliderHodnota + " %";
@@ -206,7 +195,6 @@ public class NastaveniMenu extends JPanel {
         return sliderPanel;
     }
 
-    /** Vlastní ComboBox s tmavým vzhledem. */
     private JComboBox<String> vytvorComboBox() {
         JComboBox<String> cb = new JComboBox<String>() {
             @Override
@@ -214,14 +202,11 @@ public class NastaveniMenu extends JPanel {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 int w = getWidth(), h = getHeight();
-                // Pozadí
                 g2.setPaint(new GradientPaint(0, 0, new Color(52, 52, 65), 0, h, new Color(33, 33, 44)));
                 g2.fillRoundRect(0, 0, w, h, 8, 8);
-                // Lem
                 g2.setColor(new Color(255, 255, 255, 40));
                 g2.setStroke(new BasicStroke(1f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 8, 8);
-                // Text vybrané položky
                 Object sel = getSelectedItem();
                 if (sel != null) {
                     g2.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -229,7 +214,6 @@ public class NastaveniMenu extends JPanel {
                     FontMetrics fm = g2.getFontMetrics();
                     g2.drawString(sel.toString(), 10, (h + fm.getAscent() - fm.getDescent()) / 2);
                 }
-                // Šipka vpravo
                 int ax = w - 20, ay = h / 2;
                 g2.setColor(new Color(180, 180, 200));
                 g2.fillPolygon(new int[]{ax, ax + 10, ax + 5}, new int[]{ay - 3, ay - 3, ay + 4}, 3);
@@ -270,11 +254,8 @@ public class NastaveniMenu extends JPanel {
         return cb;
     }
 
-    // ── Aktualizace stavu ─────────────────────────────────────────────────
-
     private void obnovNabidkuHudby() {
         nacitaniDat = true;
-        // Nastav slider na uloženou hlasitost
         sliderHodnota = SpravceNastaveni.getHlasitost();
         if (sliderPanel != null) sliderPanel.repaint();
         hudbaComboBox.removeAllItems();

@@ -51,9 +51,6 @@ public class PokladnaObrazovka extends JPanel {
         gbc.weighty = 1.0;
         gbc.insets = new Insets(1, 1, 1, 1);
 
-        // ==========================================
-        // 1. LEVÁ ČÁST (Produkty + Vyhledávač)
-        // ==========================================
         JPanel levyPanel = new JPanel(new BorderLayout());
         levyPanel.setBackground(Color.WHITE);
 
@@ -129,9 +126,6 @@ public class PokladnaObrazovka extends JPanel {
 
         gbc.gridx = 0; gbc.weightx = isFs ? 0.45 : 0.42;
         add(levyPanel, gbc);
-        // ==========================================
-        // PRAVÁ ČÁST PANELU
-        // ==========================================
         JPanel rightPanel = new JPanel(new BorderLayout(0, 2));
         rightPanel.setBackground(new Color(100, 120, 200));
 
@@ -198,9 +192,6 @@ public class PokladnaObrazovka extends JPanel {
         rightPanel.add(spodniCast, BorderLayout.SOUTH);
 
 
-        // ==========================================
-        // 2. STŘEDNÍ ČÁST (Klávesnice)
-        // ==========================================
         JPanel numpadWrapper = new JPanel(new BorderLayout(0, 2));
         numpadWrapper.setBackground(Color.BLACK);
 
@@ -268,25 +259,12 @@ public class PokladnaObrazovka extends JPanel {
         numpadWrapper.add(numpadPanel, BorderLayout.CENTER);
 
         numpadDisplay = new JTextField(startNumpad);
-        numpadDisplay.setEditable(true);
+        numpadDisplay.setEditable(false);
+        numpadDisplay.setFocusable(false);      
         numpadDisplay.setHorizontalAlignment(JTextField.RIGHT);
         numpadDisplay.setBackground(Color.WHITE);
         numpadDisplay.setFont(new Font("Monospaced", Font.BOLD, isFs ? 40 : 20));
         numpadDisplay.setPreferredSize(new Dimension(0, isFs ? 70 : 45));
-
-        numpadDisplay.addKeyListener(new java.awt.event.KeyAdapter(){
-            @Override
-            public void keyTyped(java.awt.event.KeyEvent e){
-                SpravceZvuku.prehraj("kliknuti_na_obrazovku");
-                char c = e.getKeyChar();
-                if(c == '.') e.setKeyChar(',');
-                else if (!Character.isDigit(c) && c != '*' && c != '#' && c != ',') e.consume();
-            }
-        });
-        numpadDisplay.addActionListener(e -> {
-            SpravceZvuku.prehraj("kliknuti_na_obrazovku");
-            zpracujVstupZNumpadu();
-        });
         numpadWrapper.add(numpadDisplay, BorderLayout.SOUTH);
 
         gbc.gridx = 1; gbc.weightx = isFs ? 0.20 : 0.28;
@@ -296,9 +274,6 @@ public class PokladnaObrazovka extends JPanel {
         add(rightPanel, gbc);
     }
 
-    // ==========================================
-    // POMOCNÉ METODY PRO VZHLED
-    // ==========================================
     private JButton vytvorZalozku(String text, int idKategorie) {
         JButton btn = new JButton(text) {
             @Override
@@ -545,10 +520,6 @@ public class PokladnaObrazovka extends JPanel {
             }
         }
     }
-    /**
-     * Zpracuje klávesu přijatou z globálního key bindingu v herní obrazovce.
-     * Číslice a znaky se připíší do numpadDisplay, Backspace maže, Enter potvrdí.
-     */
     public void zpracujGlobalniKlavesu(char c) {
         if (numpadDisplay == null) return;
         if (c == '\n' || c == '\r') {

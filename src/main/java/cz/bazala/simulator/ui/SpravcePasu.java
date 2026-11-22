@@ -20,10 +20,6 @@ public class SpravcePasu extends JPanel {
     private int RYCHLOST_POSUVU = 1;
     private int RYCHLOST_ANIMACE = 4;
 
-    // Panel SpravcePasu je v BazalaSimulatoru roztažen na šířku odpovídající
-    // Rozmery.REF_SIRKA a na výšku odpovídající Rozmery.REF_VYSKA_PASU,
-    // takže z aktuálních rozměrů panelu umíme odvodit škálovací faktor.
-    // Referenční (nenaškálované) souřadnice v prostoru REF_SIRKA x REF_VYSKA_PASU.
     private final int REF_BOD_ZASTAVENI = 480;
     private final int REF_SCANNER_X = 610;
     private final int REF_SCANNER_Y = 34;
@@ -40,17 +36,13 @@ public class SpravcePasu extends JPanel {
     private boolean cekaNaDelitko = false;
     private boolean delitkoJeNaPase = false;
 
-    // Poslední známé rozměry panelu, kvůli přepočtu při změně rozlišení.
     private int posledniSirka = 0;
     private int posledniVyska = 0;
 
-    // --- Trpělivost obsluhovaného zákazníka ---
-    // Trpělivost se měří v tikách pohybTimeru (16 ms). Ubývá jen ve chvíli,
-    // kdy zákazník reálně čeká na odbavení (jeho dělítko dojelo na doraz).
     private static final int TRPELIVOST_TIK_MS = 16;
-    private static final double ZAKLADNI_TRPELIVOST_S = 18.0; // sekundy na "čistou" obsluhu
-    private int maxTrpelivost = 1;      // v tikách, dle vylepšení
-    private int zbyvaTrpelivost = 1;    // v tikách
+    private static final double ZAKLADNI_TRPELIVOST_S = 18.0;
+    private int maxTrpelivost = 1;
+    private int zbyvaTrpelivost = 1;
     private boolean trpelivostBezi = false;
     private boolean pauza = false;
 
@@ -75,11 +67,6 @@ public class SpravcePasu extends JPanel {
         prepocitejPolozky(sirka, vyska);
     }
 
-    /**
-     * Přepočítá pozice, cíle a velikosti všech položek na pásu po změně rozměrů
-     * panelu (např. při změně rozlišení), aby zůstaly na správných relativních
-     * místech vůči naškálovanému pásu.
-     */
     private void prepocitejPolozky(int novaSirka, int novaVyska) {
         if (posledniSirka <= 0 || posledniVyska <= 0) {
             posledniSirka = novaSirka;
@@ -109,9 +96,6 @@ public class SpravcePasu extends JPanel {
         posledniVyska = novaVyska;
     }
 
-    // ==========================================
-    // Škálování podle aktuální velikosti panelu
-    // ==========================================
     private double scaleX() {
         int w = getWidth();
         return (w <= 0) ? 1.0 : (double) w / Rozmery.REF_SIRKA;
@@ -125,7 +109,6 @@ public class SpravcePasu extends JPanel {
     private int sX(int refX) { return (int) Math.round(refX * scaleX()); }
     private int sY(int refY) { return (int) Math.round(refY * scaleY()); }
 
-    // Naškálované verze referenčních souřadnic
     private int bodZastaveni()   { return sX(REF_BOD_ZASTAVENI); }
     private int scannerX()       { return sX(REF_SCANNER_X); }
     private int scannerY()       { return sY(REF_SCANNER_Y); }
@@ -133,9 +116,6 @@ public class SpravcePasu extends JPanel {
     private int velikostPolozkyX() { return sX(REF_VELIKOST_POLOZKY); }
     private int velikostPolozkyY() { return sY(REF_VELIKOST_POLOZKY); }
 
-    // Naškálované rychlosti. RYCHLOST_POSUVU je čistě vodorovný pohyb (podle scaleX),
-    // RYCHLOST_ANIMACE je šikmý pohyb po obou osách (průměr měřítek).
-    // Vždy aspoň 1 px, aby se pohyb při malém měřítku nezastavil.
     private int rychlostPosuvu() {
         return Math.max(1, (int) Math.round(RYCHLOST_POSUVU * scaleX()));
     }
@@ -154,11 +134,6 @@ public class SpravcePasu extends JPanel {
         }
     }
 
-    // ==========================================
-    // Trpělivost obsluhovaného zákazníka
-    // ==========================================
-
-    /** Nastaví plnou trpělivost dle aktuálního vylepšení a pozastaví odpočet. */
     private void resetTrpelivost() {
         double nasobic = (simulator != null) ? simulator.getNasobicTrpelivosti() : 1.0;
         double sekundy = ZAKLADNI_TRPELIVOST_S * nasobic;
@@ -167,16 +142,11 @@ public class SpravcePasu extends JPanel {
         trpelivostBezi = false;
     }
 
-    /** Zbývající trpělivost jako podíl 0..1 (1 = plná pohoda, 0 = naštvaný). */
     public double getPomerTrpelivosti() {
         if (maxTrpelivost <= 0) return 0.0;
         return Math.max(0.0, Math.min(1.0, (double) zbyvaTrpelivost / maxTrpelivost));
     }
 
-    /**
-     * Posune odpočet trpělivosti o jeden tik, pokud zákazník reálně čeká
-     * (jeho dělítko už dojelo na doraz a čeká se jen na odbavení/platbu).
-     */
     private void tikTrpelivosti() {
         if (pauza) return;
         if (trpelivostBezi && zbyvaTrpelivost > 0) {
@@ -251,7 +221,6 @@ public class SpravcePasu extends JPanel {
                             }
                             int kapacita = (simulator != null && simulator.maDruhyScanner()) ? 2 : 1;
                             if (naScanneru < kapacita) {
-                                // Druhou položku posuneme pod první, ať se nepřekrývají.
                                 int cilY = scannerY() + (naScanneru * sY(REF_VELIKOST_POLOZKY + 10));
                                 novaPolozka.nastavCil(scannerX(), cilY, PolozkaNaPase.Stav.JEDE_NA_SCANNER);
                             } else {
@@ -276,7 +245,6 @@ public class SpravcePasu extends JPanel {
     private void vygenerujDelitko() {
         Zbozi delitkoData = new Zbozi("delitko_nakupu", -1, -1, 0, 0, 0, 1, 0, "delitko_nakupu");
 
-        // ROZMĚRY DĚLÍTKA
         int vyskaDelitka = sY(REF_VELIKOST_POLOZKY * 2);
         int sirkaDelitka = sX(REF_VELIKOST_POLOZKY / 2);
 
@@ -339,8 +307,6 @@ public class SpravcePasu extends JPanel {
             pasGif.beziPas(pasBezi);
         }
 
-        // Zákazník čeká (a tím mu dochází trpělivost), jakmile nějaká jeho položka
-        // stojí na dorazu - tedy pás se kvůli němu zastavil.
         boolean obsluhovanyCeka = false;
         for (PolozkaNaPase p : aktivniPolozky) {
             if (p.stav == PolozkaNaPase.Stav.NA_PASE
@@ -362,7 +328,6 @@ public class SpravcePasu extends JPanel {
             PolozkaNaPase p = aktivniPolozky.get(i);
 
             if (p.stav == PolozkaNaPase.Stav.NA_PASE) {
-                // Automatické odbavení kusového zboží (vylepšení Chytré kódy).
                 if (autoSken && !platbaProbiha
                         && p.idZakaznika == obsluhovanyZakaznik
                         && p.zboziData.jeKusove()
@@ -392,8 +357,6 @@ public class SpravcePasu extends JPanel {
                 animujKTargetu(p);
             }
         }
-
-        // Překreslení kvůli liště nálady nad obsluhovaným zákazníkem.
         if (trpelivostBezi) repaint();
     }
 
@@ -439,36 +402,64 @@ public class SpravcePasu extends JPanel {
         }
         return false;
     }
-    /**
-     * SPACE: pošle první skenovanou položku na pásu (nejlevější NA_PASE jeSkenovane)
-     * na scanner — jako kdyby na ni hráč kliknul.
-     */
+
     public void zpracujSpaceBar() {
         if (pauza) return;
         if (simulator != null && simulator.cekaNaPlatbu()) return;
 
-        // Najdi nejlevější skenovanou položku obsluhovaného zákazníka na pásu
-        PolozkaNaPase cil = null;
+        int kapacita = (simulator != null && simulator.maDruhyScanner()) ? 2 : 1;
+
+        int naScanneru = 0;
+        for (PolozkaNaPase p : aktivniPolozky) {
+            if (p.stav == PolozkaNaPase.Stav.JEDE_NA_SCANNER || p.stav == PolozkaNaPase.Stav.CEKA_NA_SCANNERU)
+                naScanneru++;
+        }
+
+        if (naScanneru < kapacita) {
+            PolozkaNaPase cil = null;
+            for (PolozkaNaPase p : aktivniPolozky) {
+                if (p.idZakaznika == obsluhovanyZakaznik
+                        && p.stav == PolozkaNaPase.Stav.NA_PASE
+                        && p.zboziData.jeSkenovane()) {
+                    if (cil == null || p.getX() > cil.getX()) cil = p;
+                }
+            }
+            if (cil != null) {
+                int cilY = scannerY() + (naScanneru * sY(REF_VELIKOST_POLOZKY + 10));
+                cil.nastavCil(scannerX(), cilY, PolozkaNaPase.Stav.JEDE_NA_SCANNER);
+                return;
+            }
+        }
+
+        {
+            PolozkaNaPase cil = null;
+            for (PolozkaNaPase p : aktivniPolozky) {
+                if (p.idZakaznika == obsluhovanyZakaznik
+                        && p.stav == PolozkaNaPase.Stav.NA_PASE
+                        && p.zboziData.jeKusove()) {
+                    if (cil == null || p.getX() > cil.getX()) cil = p;
+                }
+            }
+            if (cil != null) {
+                if (simulator != null) simulator.pridejZboziNaUctenku(cil.zboziData, cil.pocetKusu);
+                int nahodneY = cil.getY() + sY(random.nextInt(101) - 50);
+                cil.nastavCil(odstavX(), nahodneY, PolozkaNaPase.Stav.JEDE_DO_ODSTAVNEHO_MISTA);
+                return;
+            }
+        }
+
         for (PolozkaNaPase p : aktivniPolozky) {
             if (p.idZakaznika == obsluhovanyZakaznik
                     && p.stav == PolozkaNaPase.Stav.NA_PASE
-                    && p.zboziData.jeSkenovane()) {
-                if (cil == null || p.getX() < cil.getX()) cil = p;
+                    && p.zboziData.id == -1) {
+                if (p.getX() >= bodZastaveni()) {
+                    aktivniPolozky.remove(p);
+                    remove(p);
+                    repaint();
+                    if (simulator != null) simulator.zahajPlatbu();
+                }
+                return;
             }
-        }
-        if (cil == null) return;
-
-        int naScanneru = 0;
-        for (PolozkaNaPase q : aktivniPolozky) {
-            if (q.stav == PolozkaNaPase.Stav.JEDE_NA_SCANNER || q.stav == PolozkaNaPase.Stav.CEKA_NA_SCANNERU)
-                naScanneru++;
-        }
-        int kapacita = (simulator != null && simulator.maDruhyScanner()) ? 2 : 1;
-        if (naScanneru < kapacita) {
-            int cilY = scannerY() + (naScanneru * sY(REF_VELIKOST_POLOZKY + 10));
-            cil.nastavCil(scannerX(), cilY, PolozkaNaPase.Stav.JEDE_NA_SCANNER);
-        } else {
-            if (simulator != null) simulator.vypisDoKonzole("Chyba: Scanner je momentálně obsazený!");
         }
     }
 
@@ -486,9 +477,6 @@ public class SpravcePasu extends JPanel {
         repaint();
     }
 
-    // ==========================================
-    // Pauza hry (zastaví pohyb pásu i spawn, ponechá overlay menu funkční)
-    // ==========================================
     public void pozastav() {
         pauza = true;
         if (spawnTimer != null) spawnTimer.stop();
@@ -534,7 +522,6 @@ public class SpravcePasu extends JPanel {
         super.paintComponent(g);
         if (!trpelivostBezi) return;
 
-        // Najdi nejpravější položku obsluhovaného zákazníka, nad ní vykresli náladu.
         PolozkaNaPase cil = null;
         for (PolozkaNaPase p : aktivniPolozky) {
             if (p.idZakaznika == obsluhovanyZakaznik
@@ -555,17 +542,14 @@ public class SpravcePasu extends JPanel {
         int y = cil.getY() - vyskaLista - sY(6);
         if (y < 0) y = 0;
 
-        // Pozadí lišty
         g2.setColor(new Color(0, 0, 0, 120));
         g2.fillRoundRect(x - 1, y - 1, sirkaLista + 2, vyskaLista + 2, 6, 6);
 
-        // Výplň: zelená -> žlutá -> červená podle zbývající trpělivosti
         int r = (int) (255 * (1.0 - pomer));
         int zelena = (int) (200 * pomer);
         g2.setColor(new Color(Math.min(255, r), Math.min(255, zelena + 55), 40));
         g2.fillRoundRect(x, y, (int) (sirkaLista * pomer), vyskaLista, 6, 6);
 
-        // Emoji nálada nad lištou
         String nalada = pomer > 0.6 ? "🙂" : (pomer > 0.3 ? "😐" : "😠");
         g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, Math.max(10, sY(16))));
         g2.drawString(nalada, x + sirkaLista + sX(4), y + vyskaLista);

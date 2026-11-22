@@ -12,7 +12,6 @@ public class UlozenaHra {
     public String vybranaHudba;
     public List<String> odemcenaHudba;
 
-    // Statistiky / rekordy a směna (nová pole; starší uložené hry je nemají → 0/1).
     public int celkemObslouzeno;
     public int nejlepsiKombo;
     public int nejlepsiTrzbaSmeny;

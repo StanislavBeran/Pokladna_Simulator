@@ -23,12 +23,10 @@ public class PolozkaNaPase extends JLabel {
     int cilX, cilY;
     public int idZakaznika;
 
-    // Referenční (nenaškálované) posuny jednotlivých kusů v hromádce.
     private final int[] refSablonaX = {11, 0, 28, 15, 7, 21};
     private final int[] refSablonaY = {0,  9, 19, 29, 39, 48};
     private static final int REF_OFFSET = 6;
 
-    // Aktuální škálovací faktory (odvozené od rozlišení pásu).
     private double meritkoX = 1.0;
     private double meritkoY = 1.0;
 
@@ -80,7 +78,6 @@ public class PolozkaNaPase extends JLabel {
         }
     }
 
-    // Naškálované posuny kusů v hromádce.
     private int posunX(int i) {
         int ref = (i < 6) ? refSablonaX[i] : (i * REF_OFFSET);
         return (int) Math.round(ref * meritkoX);
@@ -91,10 +88,6 @@ public class PolozkaNaPase extends JLabel {
         return (int) Math.round(ref * meritkoY);
     }
 
-    /**
-     * Přenastaví měřítko (po změně rozlišení) a znovu připraví obrázek
-     * i základní rozměry podle aktuální velikosti komponenty.
-     */
     public void prepocitejNaMeritko(double meritkoX, double meritkoY) {
         this.meritkoX = meritkoX;
         this.meritkoY = meritkoY;

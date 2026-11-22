@@ -4,12 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Jednotkové testy čisté herní logiky {@link StavHry}. Netýkají se UI ani zvuku.
- */
 class StavHryTest {
-
-    // --- Level / XP ---
 
     @Test
     void levelZacinaNaJedneARosteSXp() {
@@ -25,19 +20,14 @@ class StavHryTest {
         assertEquals(50, s.getXpDoDalsihoLevelu());
     }
 
-    // --- Odemykání zboží ---
-
     @Test
     void odemkniZboziPridaNoveAleNeDuplikuje() {
         StavHry s = new StavHry();
         assertTrue(s.odemkniZbozi(42));
         assertTrue(s.getOdemceneZbozi().contains(42));
 
-        // Druhé odemknutí stejného ID už nic nepřidá.
         assertFalse(s.odemkniZbozi(42));
     }
-
-    // --- Hudba ---
 
     @Test
     void koupeHudbyStrhneCenuAPridaJi() {
@@ -48,7 +38,6 @@ class StavHryTest {
         assertEquals(400, s.getPenize());
         assertTrue(s.getOdemcenaHudba().contains("pisnicka"));
 
-        // Už vlastněnou hudbu nelze koupit znovu.
         assertEquals(StavHry.VysledekKoupeHudby.JIZ_VLASTNENO, s.zkusKoupitHudbu("pisnicka", 600));
         assertEquals(400, s.getPenize());
     }
@@ -63,8 +52,6 @@ class StavHryTest {
         assertFalse(s.getOdemcenaHudba().contains("drahapisen"));
     }
 
-    // --- Vylepšení ---
-
     @Test
     void rychlostPasuRosteAZastaviSeNaMaximu() {
         StavHry s = new StavHry();
@@ -73,7 +60,6 @@ class StavHryTest {
         for (int ocekavana = 1; ocekavana <= 4; ocekavana++) {
             assertEquals(ocekavana, s.zvysUrovenRychlostiPasu());
         }
-        // Páté zvýšení už je nad maximem.
         assertEquals(-1, s.zvysUrovenRychlostiPasu());
         assertEquals(4, s.getUrovenRychlostiPasu());
     }
@@ -86,7 +72,6 @@ class StavHryTest {
         assertEquals(1, s.zvysUrovenVylepseni(StavHry.Vylepseni.DRUHY_SCANNER));
         assertTrue(s.maDruhyScanner());
 
-        // Druhý scanner už nejde vylepšit výš.
         assertEquals(-1, s.zvysUrovenVylepseni(StavHry.Vylepseni.DRUHY_SCANNER));
     }
 
@@ -106,14 +91,11 @@ class StavHryTest {
     @Test
     void setVylepseniNormalizujeDelkuAVstup() {
         StavHry s = new StavHry();
-        // Kratší / nečíselný vstup se bezpečně normalizuje na délku 5.
         s.setVylepseni("4x");
         assertEquals(StavHry.POCET_VYLEPSENI, s.getVylepseni().length());
         assertEquals(4, s.getUrovenRychlostiPasu());
     }
-
-    // --- Kombo ---
-
+    
     @Test
     void komboRosteANasobicSeStropuje() {
         StavHry s = new StavHry();
@@ -144,8 +126,6 @@ class StavHryTest {
         assertEquals(rekord, s.getNejlepsiKombo());
     }
 
-    // --- Směna / denní cíl ---
-
     @Test
     void cilSmenyRosteSCislemSmenyALevelem() {
         int cil1 = StavHry.vypoctiCilSmeny(1, 1);
@@ -166,17 +146,14 @@ class StavHryTest {
         assertTrue(cil > 0);
         assertFalse(s.jeCilSmenySplnen());
 
-        // Nákup těsně pod cíl: ještě nesplněno.
         boolean splnenoHned = s.zaevidujNakup(cil - 1);
         assertFalse(splnenoHned);
         assertFalse(s.jeCilSmenySplnen());
 
-        // Dorovnání přes cíl: právě teď splněno (vrací true jen při přechodu).
         boolean splneno = s.zaevidujNakup(10);
         assertTrue(splneno);
         assertTrue(s.jeCilSmenySplnen());
 
-        // Další nákup už nehlásí nové splnění.
         assertFalse(s.zaevidujNakup(100));
     }
 

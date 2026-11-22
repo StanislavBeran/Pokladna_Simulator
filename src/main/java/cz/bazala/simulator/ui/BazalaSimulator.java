@@ -62,10 +62,8 @@ public class BazalaSimulator extends JPanel {
     private int castkaVratit = 0;
     private int castkaVraceno = 0;
 
-    // Herní stav (peníze, XP, vylepšení, odemčení, hudba, detaily hry).
     private final StavHry stav = new StavHry();
 
-    // Konstanty pro výpočet XP za nákup
     private static final int XP_DELITEL_CENY = 5;      // část ceny zboží převedená na XP
     private static final int XP_ZA_KUSOVE_ZBOZI = 1;   // bonus za zboží prodávané na kusy (typ 0)
     private static final int XP_ZA_VAZENE_ZBOZI = 5;   // bonus za zboží z kategorií 1-4
@@ -74,7 +72,6 @@ public class BazalaSimulator extends JPanel {
     private static final int XP_FINALNI_DELITEL = 4;   // zmírnění celkového zisku XP
     private static final int XP_MINIMUM = 5;           // minimální XP za jakýkoli nákup
 
-    // Prahy spokojenosti (podíl zbývající trpělivosti) pro kombo.
     private static final double PRAH_SPOKOJENOSTI_KOMBO = 0.6; // nad = kombo roste
     private static final double PRAH_NASTVANI = 0.3;           // pod = kombo se ruší
 
@@ -96,7 +93,6 @@ public class BazalaSimulator extends JPanel {
             panelPenez.setPenize(1500);
             vrstvy.add(panelPenez, Integer.valueOf(5));
 
-            // XP panel se nezobrazuje – level byl odebrán z HUD.
             panelXp = new HerniPanel(HerniPanel.Typ.XP);
 
             notifikacniBanner = new NotifikacniBanner();
@@ -144,7 +140,6 @@ public class BazalaSimulator extends JPanel {
             hotspoty.add(new InteraktivniZona(745, 476, 41, 72, "Platební terminál", this));
             hotspoty.add(new InteraktivniZona(800, 330, 20, 20, "vypínač", true, this));
 
-            // Bankovky
             hotspoty.add(new InteraktivniZona(532, 580, 38, 72, "100 Kč", this));
             hotspoty.add(new InteraktivniZona(576, 580, 38, 72, "200 Kč", this));
             hotspoty.add(new InteraktivniZona(617, 580, 38, 72, "500 Kč", this));
@@ -152,7 +147,6 @@ public class BazalaSimulator extends JPanel {
             hotspoty.add(new InteraktivniZona(702, 580, 38, 72, "2000 Kč", this));
             hotspoty.add(new InteraktivniZona(742, 580, 38, 72, "5000 Kč", this));
 
-            // Mince
             hotspoty.add(new InteraktivniZona(533, 661, 36, 36, "1 Kč", true, this));
             hotspoty.add(new InteraktivniZona(576, 661, 36, 36, "2 Kč", true, this));
             hotspoty.add(new InteraktivniZona(617, 661, 36, 36, "5 Kč", true, this));
@@ -177,38 +171,90 @@ public class BazalaSimulator extends JPanel {
         });
 
         add(vrstvy, BorderLayout.CENTER);
+    }
 
-        // Globální klávesové zkratky: číslice, *, #, ,, Backspace, Enter → numpad pokladny
-        // Fungují kdykoliv je herní panel ve fokusu (bez nutnosti kliknout do políčka).
-        String[] klicePismenky = {"0","1","2","3","4","5","6","7","8","9","ASTERISK","NUMBER_SIGN","COMMA","PERIOD"};
-        char[]   znaky         = {'0','1','2','3','4','5','6','7','8','9','*',       '#',          ',',    ','};
-        for (int i = 0; i < klicePismenky.length; i++) {
-            final char znak = znaky[i];
-            String akceName = "numpad_" + klicePismenky[i];
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(klicePismenky[i]), akceName);
-            getActionMap().put(akceName, new AbstractAction() {
+    public boolean dispatchKlavesa(java.awt.event.KeyEvent e) {
+        if (e.getKeyCode() != java.awt.event.KeyEvent.VK_SPACE) return false;
+       
+        if (e.getID() == java.awt.event.KeyEvent.KEY_PRESSED) {
+            if (panelObrazovky == null || !panelObrazovky.isVisible()) return false;
+            if (herniMenu != null && herniMenu.isVisible()) return false;
+            if (obchodMenu != null && obchodMenu.isVisible()) return false;
+            if (spravcePasu != null) spravcePasu.zpracujSpaceBar();
+        }
+        return true;
+    }
+
+    public void registrujKlavesy(javax.swing.JRootPane rootPane) {
+        Object[][] mapovani = {
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_0, 0), '0' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_1, 0), '1' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_2, 0), '2' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_3, 0), '3' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_4, 0), '4' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_5, 0), '5' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_6, 0), '6' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_7, 0), '7' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_8, 0), '8' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_9, 0), '9' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD0, 0), '0' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD1, 0), '1' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD2, 0), '2' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD3, 0), '3' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD4, 0), '4' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD5, 0), '5' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD6, 0), '6' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD7, 0), '7' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD8, 0), '8' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_NUMPAD9, 0), '9' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_MULTIPLY, 0), '*' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_8, java.awt.event.InputEvent.SHIFT_DOWN_MASK), '*' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_COMMA, 0), ',' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PERIOD, 0), ',' },
+            { KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DECIMAL, 0), ',' },
+        };
+
+        for (Object[] par : mapovani) {
+            KeyStroke ks = (KeyStroke) par[0];
+            char znak = (char) par[1];
+            String akce = "gl_" + ks.toString();
+            rootPane.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(ks, akce);
+            rootPane.getActionMap().put(akce, new AbstractAction() {
                 @Override public void actionPerformed(java.awt.event.ActionEvent e) {
-                    if (panelObrazovky != null && panelObrazovky.isVisible()) panelObrazovky.zpracujGlobalniKlavesu(znak);
+                    if (panelObrazovky != null && panelObrazovky.isVisible())
+                        panelObrazovky.zpracujGlobalniKlavesu(znak);
                 }
             });
         }
-        // Backspace
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("BACK_SPACE"), "numpad_backspace");
-        getActionMap().put("numpad_backspace", new AbstractAction() {
-            @Override public void actionPerformed(java.awt.event.ActionEvent e) {
-                if (panelObrazovky != null && panelObrazovky.isVisible()) panelObrazovky.zpracujGlobalniKlavesu('\b');
-            }
-        });
-        // Enter
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ENTER"), "numpad_enter");
-        getActionMap().put("numpad_enter", new AbstractAction() {
-            @Override public void actionPerformed(java.awt.event.ActionEvent e) {
-                if (panelObrazovky != null && panelObrazovky.isVisible()) panelObrazovky.zpracujGlobalniKlavesu('\n');
-            }
-        });
-        // SPACE → pošle první skenovanou položku na pásu na scanner
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("SPACE"), "space_posun");
-        getActionMap().put("space_posun", new AbstractAction() {
+
+        for (KeyStroke ks : new KeyStroke[]{
+                KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_BACK_SPACE, 0),
+                KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0) }) {
+            String akce = "gl_" + ks.toString();
+            rootPane.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(ks, akce);
+            rootPane.getActionMap().put(akce, new AbstractAction() {
+                @Override public void actionPerformed(java.awt.event.ActionEvent e) {
+                    if (panelObrazovky != null && panelObrazovky.isVisible())
+                        panelObrazovky.zpracujGlobalniKlavesu('\b');
+                }
+            });
+        }
+
+        for (KeyStroke ks : new KeyStroke[]{
+                KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ENTER, 0),
+                KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ENTER, 0) }) {
+            rootPane.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(ks, "gl_enter");
+            rootPane.getActionMap().put("gl_enter", new AbstractAction() {
+                @Override public void actionPerformed(java.awt.event.ActionEvent e) {
+                    if (panelObrazovky != null && panelObrazovky.isVisible())
+                        panelObrazovky.zpracujGlobalniKlavesu('\n');
+                }
+            });
+        }
+
+        rootPane.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_SPACE, 0), "gl_space");
+        rootPane.getActionMap().put("gl_space", new AbstractAction() {
             @Override public void actionPerformed(java.awt.event.ActionEvent e) {
                 if (spravcePasu != null) spravcePasu.zpracujSpaceBar();
             }
@@ -269,7 +315,6 @@ public class BazalaSimulator extends JPanel {
         }
         if (notifikacniBanner != null) {
             notifikacniBanner.setBounds(0, 0, w, h);
-            // Předáme aktuální pozici obrazovky pokladny pro PRUH mód
             if (panelObrazovky != null) {
                 int sx = (int)(SCREEN_X * scaleW);
                 int sy = (int)(SCREEN_Y * scaleH);
@@ -462,8 +507,6 @@ public class BazalaSimulator extends JPanel {
                     notifikacniBanner.zobraz(NotifikacniBanner.Typ.USPECH, "Platba kartou přijata!", "", 2000);
                 }
                 dokonciPlatbu(true);
-            } else {
-                // nic – zákazník platí kartou, nereaguj na jiné kliknutí
             }
         } else {
             if (nazev.equals("Platební terminál")) {
@@ -507,20 +550,16 @@ public class BazalaSimulator extends JPanel {
             panelVracenychPenez.vycistiHromadku();
         }
         if (uspesne) {
-            SpravceZvuku.prehraj("mince"); // cinknutí kasy při zaplacení
-
-            // Spokojenost zákazníka podle zbývající trpělivosti v okamžiku platby.
+            SpravceZvuku.prehraj("mince");
             double spokojenost = (spravcePasu != null) ? spravcePasu.getPomerTrpelivosti() : 1.0;
 
-            // Kombo: bezchybný a spokojený zákazník ho zvedá, naštvaný ho nuluje.
             if (spokojenost >= PRAH_SPOKOJENOSTI_KOMBO) {
                 stav.zvysKombo();
             } else if (spokojenost < PRAH_NASTVANI) {
                 stav.vynulujKombo();
             }
 
-            // Výsledné násobiče: vylepšení (bonus) × kombo × spokojenost (min 0.5).
-            double faktorSpokojenosti = 0.5 + 0.5 * spokojenost; // 0.5..1.0
+            double faktorSpokojenosti = 0.5 + 0.5 * spokojenost; 
             double nasobic = stav.getNasobicOdmen() * stav.getNasobicKomba() * faktorSpokojenosti;
 
             int zakladXp = vypocitejXpZaNakup(panelObrazovky.getPolozkyNaUctence());
@@ -530,7 +569,6 @@ public class BazalaSimulator extends JPanel {
             nactiXp(stav.getCelkoveXp() + xpZaNakup);
             nactiPenize(stav.getPenize() + penizeZaNakup);
 
-            // Zaevidování do směny a statistik.
             boolean cilSplnen = stav.zaevidujNakup(penizeZaNakup);
 
             if (smenaLista != null) {
@@ -564,7 +602,7 @@ public class BazalaSimulator extends JPanel {
         }
     }
 
-    /** Oznámí splnění denního cíle, posune směnu a nastaví nový cíl. */
+
     private void oznamSplneniCile() {        int odmena = 300 + stav.getCisloSmeny() * 100;
         nactiPenize(stav.getPenize() + odmena);
         stav.setCisloSmeny(stav.getCisloSmeny() + 1);
@@ -621,7 +659,6 @@ public class BazalaSimulator extends JPanel {
         stav.setVybranaHudba(vybrana);
         stav.setOdemcenaHudba(odemcena);
 
-        // Zahájení (pokračování) směny: nastaví cíl podle čísla směny a levelu.
         stav.zahajNovouSmenu();
         stav.vynulujKombo();
         if (smenaLista != null) {
@@ -629,7 +666,7 @@ public class BazalaSimulator extends JPanel {
         }
     }
 
-    /** Načte uložené statistiky/rekordy a číslo směny z uložené hry. */
+
     public void nactiStatistiky(int celkemObslouzeno, int nejlepsiKombo, int nejlepsiTrzbaSmeny,
                                 int celkemVydelano, int cisloSmeny) {
         stav.setCelkemObslouzeno(celkemObslouzeno);
@@ -680,12 +717,10 @@ public class BazalaSimulator extends JPanel {
         }
     }
 
-    /** Pozastaví běh pásu (pohyb i spawn). Volá se při otevření menu/obchodu. */
     public void pozastavHru() {
         if (spravcePasu != null) spravcePasu.pozastav();
     }
 
-    /** Obnoví běh pásu po zavření menu/obchodu, pokud hra běží. */
     public void obnovHru() {
         if (spravcePasu != null && stav.jeHraNactena()) spravcePasu.obnov();
     }
@@ -700,17 +735,14 @@ public class BazalaSimulator extends JPanel {
         }
     }
 
-    /** Násobič trpělivosti z vylepšení - čte ho SpravcePasu při startu zákazníka. */
     public double getNasobicTrpelivosti() {
         return stav.getNasobicTrpelivosti();
     }
 
-    /** True, pokud je aktivní druhý scanner (SpravcePasu povolí 2 položky na scanneru). */
     public boolean maDruhyScanner() {
         return stav.maDruhyScanner();
     }
 
-    /** True, pokud se kusové zboží odbavuje automaticky. */
     public boolean maAutoSkenKusove() {
         return stav.maAutoSkenKusove();
     }
@@ -719,10 +751,6 @@ public class BazalaSimulator extends JPanel {
         return stav.getUrovenVylepseni(v);
     }
 
-    /**
-     * Koupě vylepšení daného druhu: strhne cenu, zvýší úroveň a aplikuje
-     * dopady do běžící hry. Vrací true při úspěchu.
-     */
     public boolean kupVylepseni(StavHry.Vylepseni druh, int cena) {
         if (stav.getPenize() < cena) {
             vypisDoKonzole("Chyba: Nedostatek peněz na vylepšení!");
@@ -738,7 +766,6 @@ public class BazalaSimulator extends JPanel {
         return true;
     }
 
-    /** Promítne aktuální úrovně všech vylepšení do běžící hry. */
     private void aplikujVsechnaVylepseni() {
         if (spravcePasu != null) {
             spravcePasu.aplikujVylepseniRychlosti(stav.getUrovenRychlostiPasu());
@@ -762,11 +789,6 @@ public class BazalaSimulator extends JPanel {
 
     }
 
-    /**
-     * Panic reset: zahodí rozdělaný nákup a zaseknutý stav (pás, scanner,
-     * platba) a spustí nového zákazníka. Herní postup (peníze, XP, odemčení)
-     * zůstává zachován - čistí se jen aktuální rozehraná situace.
-     */
     public void resetujZakaznika() {
         cekaNaPlatbu = false;
         platbaKartou = false;
@@ -785,13 +807,13 @@ public class BazalaSimulator extends JPanel {
         spustSimulaci();
     }
     public boolean kupHudbu(String souborHudby, int cena) {
-        StavHry.VysledekKoupeHudby vysledek = stav.zkusKoupitHudbu(souborHudby, cena);
+        StavHry.KoupeneHudby vysledek = stav.zkusKoupitHudbu(souborHudby, cena);
         switch (vysledek) {
             case KOUPENO:
                 nactiPenize(stav.getPenize());
                 vypisDoKonzole("Zakoupena nová hudba! Můžeš ji změnit v Nastavení.");
                 return true;
-            case JIZ_VLASTNENO:
+            case VLASTNI:
                 vypisDoKonzole("Chyba: Tuto hudbu už vlastníš!");
                 return false;
             case NEDOSTATEK_PENEZ:

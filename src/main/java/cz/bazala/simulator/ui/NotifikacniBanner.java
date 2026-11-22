@@ -28,10 +28,9 @@ public class NotifikacniBanner extends JPanel {
         INFO
     }
 
-    // ── Rozměry ──────────────────────────────────────────────────────────────
     private static final int ROH          = 12;
-    private static final int PRUH_VYSKA   = 44;   // výška pruhu nad obrazovkou
-    private static final int PRUH_PADDING = 10;   // odsazení od okraje obrazovky
+    private static final int PRUH_VYSKA   = 44; 
+    private static final int PRUH_PADDING = 10;
 
     private static final Font FONT_IKONA       = new Font("Segoe UI Emoji", Font.PLAIN, 20);
     private static final Font FONT_TITULEK     = new Font("Segoe UI", Font.BOLD, 18);
@@ -39,18 +38,15 @@ public class NotifikacniBanner extends JPanel {
     private static final Font FONT_TITULEK_STR = new Font("Segoe UI", Font.BOLD, 22);
     private static final Font FONT_DETAIL_STR  = new Font("Segoe UI", Font.PLAIN, 15);
 
-    // ── Stav ─────────────────────────────────────────────────────────────────
     private String ikona   = "";
     private String titulek = "";
     private String text    = "";
     private Color  bgColor = new Color(40, 40, 40);
     private float  alfa    = 0f;
-    private boolean jeStred = true;   // true = STRED, false = PRUH
+    private boolean jeStred = true;  
 
-    // Pozice/rozměry pokladny (pro PRUH mod), aktualizuje BazalaSimulator
     private int pokladnaX = 0, pokladnaY = 0, pokladnaW = 400;
 
-    // ── Animace ──────────────────────────────────────────────────────────────
     private Timer animTimer;
     private long  faseStart;
     private enum Faze { FADE_IN, DRZI, FADE_OUT, SKRYTY }
@@ -58,9 +54,8 @@ public class NotifikacniBanner extends JPanel {
     private int  drzeniMs = 2000;
     private static final int FADE_IN_MS  = 150;
     private static final int FADE_OUT_MS = 250;
-    private boolean trvale = false;  // true = drží se dokud se nezavolá skryj()
+    private boolean trvale = false;
 
-    // fronta – novější zpráva přebije tu co čeká
     private String fronterIkona, fronterTitulek, fronterText;
     private Color  fronterBarva;
     private int    fronterDrzeni;
@@ -72,9 +67,6 @@ public class NotifikacniBanner extends JPanel {
         setVisible(false);
     }
 
-    // ── Veřejné API ──────────────────────────────────────────────────────────
-
-    /** Voláno z BazalaSimulator při každé změně rozměrů obrazovky pokladny. */
     public void nastavPoziciPokladny(int x, int y, int w) {
         this.pokladnaX = x;
         this.pokladnaY = y;
@@ -105,11 +97,9 @@ public class NotifikacniBanner extends JPanel {
         });
     }
 
-    /** Zobrazí banner trvale — zůstane viditelný dokud se nezavolá skryj(). */
     public void zobrazTrvale(Typ typ, String titulek, String detail) {
         boolean stred = jeStredTyp(typ);
         SwingUtilities.invokeLater(() -> {
-            // Trvale zobrazení přebíjí cokoliv co právě běží
             maFrontu = false;
             trvale = true;
             spustBanner(ikonaProTyp(typ), titulek,
@@ -118,7 +108,6 @@ public class NotifikacniBanner extends JPanel {
         });
     }
 
-    /** Spustí fade-out trvale zobrazeného banneru. */
     public void skryj() {
         SwingUtilities.invokeLater(() -> {
             if (faze == Faze.FADE_IN || faze == Faze.DRZI) {
@@ -128,8 +117,6 @@ public class NotifikacniBanner extends JPanel {
             }
         });
     }
-
-    // ── Interní ──────────────────────────────────────────────────────────────
 
     private void spustBanner(String ikon, String titl, String txt,
                               Color barva, int drzeni, boolean stred) {
@@ -191,8 +178,6 @@ public class NotifikacniBanner extends JPanel {
         if (animTimer != null) { animTimer.stop(); animTimer = null; }
     }
 
-    // ── Vykreslení ───────────────────────────────────────────────────────────
-
     @Override
     protected void paintComponent(Graphics g) {
         if (alfa <= 0f) return;
@@ -208,7 +193,6 @@ public class NotifikacniBanner extends JPanel {
         g2.dispose();
     }
 
-    /** Box uprostřed obrazovky — pro CHYBA / INFO / NOVA_SMENA. */
     private void kresliStred(Graphics2D g2) {
         int panW = getWidth();
         int panH = getHeight();
@@ -216,7 +200,6 @@ public class NotifikacniBanner extends JPanel {
         boolean maDetail = !text.isEmpty();
         int boxH = 68;
 
-        // Nejdřív změříme kolik místa obsah potřebuje, pak teprve určíme boxW
         g2.setFont(FONT_IKONA);
         int ikonaW = ikona.isEmpty() ? 0 : g2.getFontMetrics().stringWidth(ikona) + 10;
 
@@ -226,7 +209,7 @@ public class NotifikacniBanner extends JPanel {
         int detailW = 0;
         if (maDetail) {
             g2.setFont(FONT_DETAIL_STR);
-            detailW = g2.getFontMetrics().stringWidth(text) + 21; // +21 pro oddělovač + mezery
+            detailW = g2.getFontMetrics().stringWidth(text) + 21; // +21 
         }
 
         int potrebaW = 18 + ikonaW + titulekW + detailW + 24; // levý + pravý padding
@@ -240,7 +223,6 @@ public class NotifikacniBanner extends JPanel {
         int midY = by + boxH / 2;
         int curX = bx + 18;
 
-        // Ikona
         if (!ikona.isEmpty()) {
             g2.setFont(FONT_IKONA);
             FontMetrics fmI = g2.getFontMetrics();
@@ -249,7 +231,6 @@ public class NotifikacniBanner extends JPanel {
             curX += fmI.stringWidth(ikona) + 10;
         }
 
-        // Titulek
         g2.setFont(FONT_TITULEK_STR);
         FontMetrics fmT = g2.getFontMetrics();
         g2.setColor(new Color(0, 0, 0, (int)(alfa * 100)));
@@ -257,7 +238,6 @@ public class NotifikacniBanner extends JPanel {
         g2.setColor(new Color(255, 255, 255, (int)(alfa * 255)));
         g2.drawString(titulek, curX, midY + fmT.getAscent() / 2 - 2);
 
-        // Oddělovač + detail
         if (maDetail) {
             curX += fmT.stringWidth(titulek) + 14;
             g2.setColor(new Color(255, 255, 255, (int)(alfa * 80)));
@@ -276,40 +256,33 @@ public class NotifikacniBanner extends JPanel {
         }
     }
 
-    /** Úzký pruh nad obrazovkou pokladny — pro PLATBA / USPECH. */
     private void kresliPruh(Graphics2D g2) {
         int bx = pokladnaX;
         int by = pokladnaY - PRUH_VYSKA - PRUH_PADDING;
         int bw = pokladnaW;
         int bh = PRUH_VYSKA;
 
-        // Stín
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.25f));
         g2.setColor(Color.BLACK);
         g2.fillRoundRect(bx + 4, by + 5, bw, bh, ROH, ROH);
 
-        // Pozadí
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.96f));
         g2.setColor(bgColor);
         g2.fillRoundRect(bx, by, bw, bh, ROH, ROH);
 
-        // Horní highlight
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.25f));
         g2.setColor(Color.WHITE);
         g2.setStroke(new BasicStroke(1.5f));
         g2.drawRoundRect(bx + 1, by + 1, bw - 2, bh - 2, ROH, ROH);
 
-        // Levý pruh (akcent)
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa));
         g2.setColor(bgColor.brighter().brighter());
         g2.fillRoundRect(bx, by, 7, bh, ROH, ROH);
         g2.fillRect(bx + 4, by, 3, bh);
 
-        // Obsah — jednořádkový, vertikálně centrovaný
         int midY = by + bh / 2;
         int curX = bx + 18;
 
-        // Ikona
         if (!ikona.isEmpty()) {
             g2.setFont(FONT_IKONA);
             FontMetrics fmI = g2.getFontMetrics();
@@ -318,7 +291,6 @@ public class NotifikacniBanner extends JPanel {
             curX += fmI.stringWidth(ikona) + 10;
         }
 
-        // Titulek
         g2.setFont(FONT_TITULEK);
         FontMetrics fmT = g2.getFontMetrics();
         g2.setColor(new Color(0, 0, 0, (int)(alfa * 100)));
@@ -326,7 +298,6 @@ public class NotifikacniBanner extends JPanel {
         g2.setColor(new Color(255, 255, 255, (int)(alfa * 255)));
         g2.drawString(titulek, curX, midY + fmT.getAscent() / 2 - 2);
 
-        // Detail
         if (!text.isEmpty()) {
             curX += fmT.stringWidth(titulek) + 14;
             g2.setColor(new Color(255, 255, 255, (int)(alfa * 70)));
@@ -345,32 +316,26 @@ public class NotifikacniBanner extends JPanel {
         }
     }
 
-    /** Pomocná – kreslí zaoblený box se stínem a akcentem (pro STRED mód). */
     private void kresliBox(Graphics2D g2, int bx, int by, int bw, int bh) {
-        // Stín
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.30f));
         g2.setColor(Color.BLACK);
         g2.fillRoundRect(bx + 5, by + 6, bw, bh, ROH, ROH);
 
-        // Pozadí
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.96f));
         g2.setColor(bgColor);
         g2.fillRoundRect(bx, by, bw, bh, ROH, ROH);
 
-        // Horní highlight
+
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.25f));
         g2.setColor(Color.WHITE);
         g2.setStroke(new BasicStroke(1.5f));
         g2.draw(new RoundRectangle2D.Float(bx + 1, by + 1, bw - 2, bh - 2, ROH, ROH));
 
-        // Levý pruh (akcent)
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa));
         g2.setColor(bgColor.brighter().brighter());
         g2.fillRoundRect(bx, by, 7, bh, ROH, ROH);
         g2.fillRect(bx + 4, by, 3, bh);
     }
-
-    // ── Mapování ─────────────────────────────────────────────────────────────
 
     private static boolean jeStredTyp(Typ typ) {
         return typ == Typ.CHYBA || typ == Typ.NOVA_SMENA || typ == Typ.INFO;

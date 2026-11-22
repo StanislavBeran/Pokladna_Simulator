@@ -3,9 +3,7 @@ package cz.bazala.simulator.io;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Spravuje nastavení zobrazení a hlasitosti a jejich perzistenci v nastaveni.cfg.
- */
+
 public class SpravceNastaveni {
 
     public enum Zobrazeni {
@@ -43,7 +41,6 @@ public class SpravceNastaveni {
     private static Zobrazeni aktualniZobrazeni = null;
     private static int       aktualniHlasitost = 100;
 
-    // ── Zobrazení ─────────────────────────────────────────────────────────
 
     public static Zobrazeni getZobrazeni() {
         if (aktualniZobrazeni == null) nacti();
@@ -55,9 +52,7 @@ public class SpravceNastaveni {
         uloz();
     }
 
-    // ── Hlasitost ─────────────────────────────────────────────────────────
 
-    /** Vrátí uloženou hlasitost (0–100). Při prvním volání načte ze souboru. */
     public static int getHlasitost() {
         if (aktualniZobrazeni == null) nacti();
         return aktualniHlasitost;
@@ -68,8 +63,6 @@ public class SpravceNastaveni {
         aktualniHlasitost = Math.max(0, Math.min(100, hlasitost));
         uloz();
     }
-
-    // ── Interní ───────────────────────────────────────────────────────────
 
     private static void nacti() {
         aktualniZobrazeni = Zobrazeni.R_1280_720;

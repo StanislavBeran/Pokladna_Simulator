@@ -10,26 +10,15 @@ import java.util.List;
 
 public class SpravceSouboru {
 
-    // Stavové texty, které očekává NacistHruMenu pro zakázání tlačítek.
     public static final String STAV_PRAZDNY = "Prázdná pozice";
     public static final String STAV_CHYBA = "Chyba při čtení";
 
-    // Složka pro uložené hry - vedle spuštěné aplikace, aby ukládání fungovalo
-    // i po zabalení do JARu (do src/main/resources se zapisovat nedá).
     private static final File SLOZKA_ULOZENYCH_HER = new File("ulozeneHry");
 
-    // Původní umístění uložených her - používá se jen pro čtení kvůli
-    // zpětné kompatibilitě se staršími uloženými hrami.
     private static final String STARA_SLOZKA = "src/main/resources/ulozeneHry/";
 
-    /** Maximální délka názvu obchodu. */
     public static final int MAX_DELKA_JMENA = 30;
 
-    /**
-     * Očistí název obchodu, aby neporušil formát uloženého souboru.
-     * Odstraní znaky, které kolidují se syntaxí (uvozovky, středníky,
-     * dvojtečky, konce řádků), ořízne mezery a omezí délku.
-     */
     public static String ocistiJmeno(String jmeno) {
         if (jmeno == null) return "Obchod";
         String vysledek = jmeno.replaceAll("[\";:\\r\\n]", "").trim();
@@ -43,10 +32,6 @@ public class SpravceSouboru {
         return new File(SLOZKA_ULOZENYCH_HER, "ulozenaHra" + slot + ".txt");
     }
 
-    /**
-     * Načte uloženou hru pro daný slot. Nejdřív zkusí nové umístění,
-     * pak starší umístění ve zdrojových resources.
-     */
     public static UlozenaHra nactiUlozenouHru(int slot) {
         File novy = souborProSlot(slot);
         if (novy.exists() && novy.length() > 0) {
@@ -86,8 +71,6 @@ public class SpravceSouboru {
                         hodnota = hodnota.substring(1, hodnota.length() - 1);
                     }
 
-                    // Jeden vadný řádek nesmí zahodit celou uloženou hru - proto se
-                    // číselné položky parsují tolerantně a vadný řádek se jen přeskočí.
                     try {
                         if (radek.startsWith("Jmeno")) {
                             jmenoObchodu = hodnota;
@@ -179,7 +162,6 @@ public class SpravceSouboru {
             String odemcenaHudbaText = (odemcenaHudba == null) ? "" : String.join(",", odemcenaHudba);
             writer.println("OdemcenaHudba: " + odemcenaHudbaText + ";");
 
-            // Statistiky / rekordy a směna
             writer.println("CelkemObslouzeno: " + celkemObslouzeno + ";");
             writer.println("NejlepsiKombo: " + nejlepsiKombo + ";");
             writer.println("NejlepsiTrzbaSmeny: " + nejlepsiTrzbaSmeny + ";");
@@ -193,9 +175,6 @@ public class SpravceSouboru {
     }
 
     public static List<Zbozi> nactiZbozi() {
-        // Standardní zdroj je classpath (/zbozi.txt) - funguje i ze zabaleného JARu.
-        // Soubor v src/main/resources má přednost jen jako override pro vývoj,
-        // aby šlo upravit zboží bez rebuildu.
         File diskovyOverride = new File("src/main/resources/zbozi.txt");
         if (diskovyOverride.exists() && diskovyOverride.length() > 0) {
             return nactiZboziZeStreamu(() -> new FileInputStream(diskovyOverride), diskovyOverride.getPath());
