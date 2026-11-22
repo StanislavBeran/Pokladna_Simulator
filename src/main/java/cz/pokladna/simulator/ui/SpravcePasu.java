@@ -27,7 +27,7 @@ public class SpravcePasu extends JPanel {
     private final int REF_VELIKOST_POLOZKY = 80;
 
     private AnimovanyGif pasGif;
-    private BazalaSimulator simulator;
+    private PokladnaSimulator simulator;
     private int aktualniSpawnovanyZakaznik = 1;
     private int obsluhovanyZakaznik = 1;
 
@@ -46,7 +46,7 @@ public class SpravcePasu extends JPanel {
     private boolean trpelivostBezi = false;
     private boolean pauza = false;
 
-    public SpravcePasu(List<Zbozi> zbozi, AnimovanyGif pasGif, BazalaSimulator simulator) {
+    public SpravcePasu(List<Zbozi> zbozi, AnimovanyGif pasGif, PokladnaSimulator simulator) {
         this.zboziList = zbozi;
         this.aktivniPolozky = new ArrayList<>();
         this.pasGif = pasGif;

@@ -1,6 +1,5 @@
 package cz.pokladna.simulator.ui;
 
-import cz.pokladna.simulator.model.*;
 import cz.pokladna.simulator.io.*;
 
 import javax.swing.*;
@@ -12,7 +11,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
 
 public class NastaveniMenu extends JPanel {
     private Menu hlavniOkno;
@@ -20,7 +18,7 @@ public class NastaveniMenu extends JPanel {
     private int sliderHodnota = 100;
     private JComboBox<String> hudbaComboBox;
     private JComboBox<String> rozliseniComboBox;
-    private BazalaSimulator simulator;
+    private PokladnaSimulator simulator;
     private boolean nacitaniDat = false;
 
     private static final Color SL_BG    = new Color(35, 35, 45, 220);
@@ -58,12 +56,12 @@ public class NastaveniMenu extends JPanel {
         hudbaComboBox.addActionListener(e -> {
             if (nacitaniDat || hudbaComboBox.getSelectedItem() == null) return;
             String vybranaZobrazena = (String) hudbaComboBox.getSelectedItem();
-            BazalaSimulator sim = hlavniOkno.getSimulator();
+            PokladnaSimulator sim = hlavniOkno.getSimulator();
             if (sim == null) return;
             if (vybranaZobrazena.equals("Bez hudby")) {
                 if (!"Bez hudby".equals(sim.getVybranaHudba())) {
                     sim.nastavVybranouHudbu("Bez hudby");
-                    if (hlavniOkno.getPredchoziObrazovka().equals("BAZALA_SIMULATOR"))
+                    if (hlavniOkno.getPredchoziObrazovka().equals("POKLADNA_SIMULATOR"))
                         SpravceZvuku.zastavVsechnuHudbu();
                 }
             } else if (sim.getOdemcenaHudba() != null) {
@@ -73,7 +71,7 @@ public class NastaveniMenu extends JPanel {
                 }
                 if (puvodni != null && !puvodni.equals(sim.getVybranaHudba())) {
                     sim.nastavVybranouHudbu(puvodni);
-                    if (hlavniOkno.getPredchoziObrazovka().equals("BAZALA_SIMULATOR")) {
+                    if (hlavniOkno.getPredchoziObrazovka().equals("POKLADNA_SIMULATOR")) {
                         SpravceZvuku.zastavVsechnuHudbu();
                         SpravceZvuku.prehraj(puvodni, puvodni, 0, true);
                     }

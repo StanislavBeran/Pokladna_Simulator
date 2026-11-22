@@ -1,6 +1,5 @@
 package cz.pokladna.simulator.ui;
 
-import cz.pokladna.simulator.model.*;
 import cz.pokladna.simulator.io.*;
 
 import javax.swing.*;
@@ -8,10 +7,10 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 
 public class HerniMenu extends JPanel {
-    private BazalaSimulator simulator;
+    private PokladnaSimulator simulator;
     private Menu hlavniOkno;
 
-    public HerniMenu(BazalaSimulator simulator, Menu hlavniOkno) {
+    public HerniMenu(PokladnaSimulator simulator, Menu hlavniOkno) {
         this.simulator = simulator;
         this.hlavniOkno = hlavniOkno;
 
@@ -37,7 +36,7 @@ public class HerniMenu extends JPanel {
 
         JButton btnNastaveni = Menu.vytvorTlacitko("Nastavení");
         btnNastaveni.addActionListener(e -> {
-            hlavniOkno.setPredchoziObrazovka("BAZALA_SIMULATOR");
+            hlavniOkno.setPredchoziObrazovka("POKLADNA_SIMULATOR");
             hlavniOkno.zobrazObrazovku("NASTAVENI");
         });
 

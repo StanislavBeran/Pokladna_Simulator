@@ -1,6 +1,5 @@
 package cz.pokladna.simulator.ui;
 
-import cz.pokladna.simulator.model.*;
 import cz.pokladna.simulator.io.*;
 
 import javax.swing.*;
@@ -11,7 +10,7 @@ public class Menu extends JFrame {
     private CardLayout karty;
     private JPanel hlavniContainer;
 
-    private BazalaSimulator bazalaSimulator;
+    private PokladnaSimulator pokladnaSimulator;
     private String predchoziObrazovka = "HLAVNI_MENU";
 
     private SpravceNastaveni.Zobrazeni posledniOkenni = SpravceNastaveni.Zobrazeni.R_1280_720;
@@ -83,13 +82,13 @@ public class Menu extends JFrame {
 
 
     public Menu() {
-        setTitle("Bazala Simulator");
+        setTitle("Pokladna Simulator");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                if (bazalaSimulator != null) {
-                    bazalaSimulator.ulozHru();
+                if (pokladnaSimulator != null) {
+                    pokladnaSimulator.ulozHru();
                 }
                 System.exit(0);
             }
@@ -117,12 +116,12 @@ public class Menu extends JFrame {
         NacistHruMenu nacistHruMenu = new NacistHruMenu(this);
         NastaveniMenu nastaveniMenu = new NastaveniMenu(this);
         StatistikyMenu statistikyMenu = new StatistikyMenu(this);
-        bazalaSimulator = new BazalaSimulator(this);
+        pokladnaSimulator = new PokladnaSimulator(this);
 
         hlavniContainer.add(hlavniMenu, "HLAVNI_MENU");
         hlavniContainer.add(novaHraObrazovka, "NOVA_HRA");
         hlavniContainer.add(nacistHruMenu, "NACIST_HRU");
-        hlavniContainer.add(bazalaSimulator, "BAZALA_SIMULATOR");
+        hlavniContainer.add(pokladnaSimulator, "POKLADNA_SIMULATOR");
 
         hlavniContainer.add(nastaveniMenu, "NASTAVENI");
         hlavniContainer.add(statistikyMenu, "STATISTIKY");
@@ -131,9 +130,9 @@ public class Menu extends JFrame {
 
         aplikujZobrazeni(SpravceNastaveni.getZobrazeni());
 
-        bazalaSimulator.registrujKlavesy(getRootPane());
+        pokladnaSimulator.registrujKlavesy(getRootPane());
         java.awt.KeyboardFocusManager.getCurrentKeyboardFocusManager()
-            .addKeyEventDispatcher(bazalaSimulator::dispatchKlavesa);
+            .addKeyEventDispatcher(pokladnaSimulator::dispatchKlavesa);
     }
 
     private BackgroundPanel vytvorHlavniMenu() {
@@ -258,8 +257,8 @@ public class Menu extends JFrame {
             }
         }
     }
-    public BazalaSimulator getSimulator() {
-        return bazalaSimulator;
+    public PokladnaSimulator getSimulator() {
+        return pokladnaSimulator;
     }
 
     public static void main(String[] args) {

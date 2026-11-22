@@ -128,7 +128,7 @@ public class NacistHruMenu extends JPanel {
             karta.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {
-                    BazalaSimulator simulator = hlavniOkno.getSimulator();
+                    PokladnaSimulator simulator = hlavniOkno.getSimulator();
                     simulator.nactiPenize(hra.pocetPenez);
                     simulator.nactiXp(hra.xp);
                     simulator.nactiVylepseni(hra.vylepseni);
@@ -140,7 +140,7 @@ public class NacistHruMenu extends JPanel {
                     if (!"Bez hudby".equals(hra.vybranaHudba)) {
                         SpravceZvuku.prehraj("hra_hudba_v_pozadi", hra.vybranaHudba, 0, true);
                     }
-                    hlavniOkno.zobrazObrazovku("BAZALA_SIMULATOR");
+                    hlavniOkno.zobrazObrazovku("POKLADNA_SIMULATOR");
                     simulator.spustSimulaci();
                 }
                 @Override

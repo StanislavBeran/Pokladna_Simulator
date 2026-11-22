@@ -1,6 +1,5 @@
 package cz.pokladna.simulator.ui;
 
-import cz.pokladna.simulator.model.*;
 import cz.pokladna.simulator.io.*;
 
 import javax.swing.*;
@@ -65,7 +64,7 @@ public class NovaHraMenu extends JPanel {
                 startovniZbozi.add(16);
                 SpravceSouboru.ulozHruDoSouboru(indexSlotu, jmenoHry, penizeText, 0, "00000",
                         startovniZbozi, "obchod_theme", new ArrayList<>(List.of("obchod_theme")));
-                BazalaSimulator simulator = hlavniOkno.getSimulator();
+                PokladnaSimulator simulator = hlavniOkno.getSimulator();
                 simulator.nactiPenize(Integer.parseInt(penizeText));
                 simulator.nactiXp(0);
                 simulator.nactiVylepseni("00000");
@@ -73,7 +72,7 @@ public class NovaHraMenu extends JPanel {
                 simulator.nastavDetailyHry(indexSlotu, jmenoHry, "obchod_theme", null);
                 SpravceZvuku.zastav("obchodak_theme_sound");
                 SpravceZvuku.prehraj("hra_hudba_v_pozadi", "obchod_theme", 0, true);
-                hlavniOkno.zobrazObrazovku("BAZALA_SIMULATOR");
+                hlavniOkno.zobrazObrazovku("POKLADNA_SIMULATOR");
                 simulator.zobrazNavodANastartujHru();
             } else {
                 JOptionPane.showMessageDialog(this, "Musíš zadat název!");

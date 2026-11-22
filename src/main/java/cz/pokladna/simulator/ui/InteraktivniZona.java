@@ -1,6 +1,5 @@
 package cz.pokladna.simulator.ui;
 
-import cz.pokladna.simulator.model.*;
 import cz.pokladna.simulator.io.*;
 
 import javax.swing.*;
@@ -14,13 +13,13 @@ public class InteraktivniZona extends JPanel {
     private boolean isHovered = false;
     private String nazev;
 
-    private BazalaSimulator simulator;
+    private PokladnaSimulator simulator;
 
-    public InteraktivniZona(int x, int y, int w, int h, String nazev, BazalaSimulator simulator) {
+    public InteraktivniZona(int x, int y, int w, int h, String nazev, PokladnaSimulator simulator) {
         this(x, y, w, h, nazev, false, simulator);
     }
 
-    public InteraktivniZona(int x, int y, int w, int h, String nazev, boolean jeKulaty, BazalaSimulator simulator) {
+    public InteraktivniZona(int x, int y, int w, int h, String nazev, boolean jeKulaty, PokladnaSimulator simulator) {
         this.origX = x;
         this.origY = y;
         this.origW = w;

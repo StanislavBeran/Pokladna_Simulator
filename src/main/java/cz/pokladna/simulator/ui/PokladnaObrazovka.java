@@ -21,7 +21,7 @@ public class PokladnaObrazovka extends JPanel {
 
     private List<Zbozi> polozkyNaUctence;
     private Runnable prekresliUctenku;
-    private BazalaSimulator simulator;
+    private PokladnaSimulator simulator;
 
     private boolean zobrazovatPlatbu = false;
     private int castkaVratit = 0;
@@ -29,7 +29,7 @@ public class PokladnaObrazovka extends JPanel {
     private JLabel vahaLabel;
 
     public PokladnaObrazovka(boolean isFs, List<Zbozi> zboziList, Runnable onToggleFullscreen,
-                             BazalaSimulator simulator, int startKategorie, String startHledani, String startNumpad,
+                             PokladnaSimulator simulator, int startKategorie, String startHledani, String startNumpad,
                              List<Zbozi> startUctenka) {
         this.isFs = isFs;
         this.zboziList = zboziList;

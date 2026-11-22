@@ -34,11 +34,11 @@ class StavHryTest {
         StavHry s = new StavHry();
         s.setPenize(1000);
 
-        assertEquals(StavHry.VysledekKoupeHudby.KOUPENO, s.zkusKoupitHudbu("pisnicka", 600));
+        assertEquals(StavHry.KoupeneHudby.KOUPENO, s.zkusKoupitHudbu("pisnicka", 600));
         assertEquals(400, s.getPenize());
         assertTrue(s.getOdemcenaHudba().contains("pisnicka"));
 
-        assertEquals(StavHry.VysledekKoupeHudby.JIZ_VLASTNENO, s.zkusKoupitHudbu("pisnicka", 600));
+        assertEquals(StavHry.KoupeneHudby.VLASTNI, s.zkusKoupitHudbu("pisnicka", 600));
         assertEquals(400, s.getPenize());
     }
 
@@ -47,7 +47,7 @@ class StavHryTest {
         StavHry s = new StavHry();
         s.setPenize(100);
 
-        assertEquals(StavHry.VysledekKoupeHudby.NEDOSTATEK_PENEZ, s.zkusKoupitHudbu("drahapisen", 600));
+        assertEquals(StavHry.KoupeneHudby.NEDOSTATEK_PENEZ, s.zkusKoupitHudbu("drahapisen", 600));
         assertEquals(100, s.getPenize());
         assertFalse(s.getOdemcenaHudba().contains("drahapisen"));
     }

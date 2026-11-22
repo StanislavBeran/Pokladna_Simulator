@@ -12,7 +12,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BazalaSimulator extends JPanel {
+public class PokladnaSimulator extends JPanel {
     private Menu hlavniOkno;
     private JLayeredPane vrstvy;
     private Menu.BackgroundPanel bgPanel;
@@ -72,7 +72,7 @@ public class BazalaSimulator extends JPanel {
     private static final double PRAH_SPOKOJENOSTI_KOMBO = 0.6; // nad = kombo roste
     private static final double PRAH_NASTVANI = 0.3;           // pod = kombo se ruší
 
-    public BazalaSimulator(Menu okno) {
+    public PokladnaSimulator(Menu okno) {
         this.hlavniOkno = okno;
         setLayout(new BorderLayout());
         vrstvy = new JLayeredPane();

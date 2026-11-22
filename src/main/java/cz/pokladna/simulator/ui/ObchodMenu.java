@@ -1,20 +1,18 @@
 package cz.pokladna.simulator.ui;
 
 import cz.pokladna.simulator.model.*;
-import cz.pokladna.simulator.io.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ObchodMenu extends JPanel {
-    private BazalaSimulator simulator;
+    private PokladnaSimulator simulator;
     private int aktualniKategorie = 1;
     private JPanel seznamVylepseni;
 
-    public ObchodMenu(BazalaSimulator simulator) {
+    public ObchodMenu(PokladnaSimulator simulator) {
         this.simulator = simulator;
 
         setLayout(new GridBagLayout());

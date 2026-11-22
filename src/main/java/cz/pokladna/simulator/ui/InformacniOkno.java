@@ -22,7 +22,7 @@ public class InformacniOkno extends JPanel {
         oknoPanel.setBackground(new Color(40, 40, 40));
         oknoPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
-        JLabel nadpis = new JLabel("Vítej v Bazala Simulatoru!");
+        JLabel nadpis = new JLabel("Vítej v Pokladna Simulatoru!");
         nadpis.setFont(new Font("Segoe UI", Font.BOLD, 28));
         nadpis.setForeground(Color.WHITE);
         nadpis.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -30,7 +30,7 @@ public class InformacniOkno extends JPanel {
         oknoPanel.add(Box.createVerticalStrut(20));
 
         String navod = "<html><div style='text-align: left; width: 400px;'>" +
-                "Tady je rychlý návod jak zmáknout směnu jak Bazala:<br><br>" +
+                "Tady je rychlý návod jak zmáknout směnu:<br><br>" +
                 "1. Zboží na pásu <b>S kódem (typ 0)</b> stačí pouze kliknout a máš vyřešíno.<br>" +
                 "2. Zboží <b>Bez kódu (pečivo, zelenina, ovoce, ...)</b> dojede na scanner a zastaví se.<br>" +
                 "3. Na číselníku pak musíš zadat <b>[ID]*[POČET]</b> nebo <b>[ID]*[VÁHA] (ta je vidět pod účtenkou)</b> a stisknout <b>ENTER</b>.<br>" +
