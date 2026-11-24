@@ -1,6 +1,6 @@
 # Pokladna Simulator
 
-Školní projekt: simulátor pokladní v obchodě, napsaný v Javě (Swing).
+Absolventská práce: simulátor pokladní v obchodě, napsaný v Javě (Swing).
 
 Zákazníci posílají zboží po pásu a ty ho markuješ, zadáváš kódy, vybíráš platbu kartou nebo hotově a vracíš peníze. Za každou směnu dostaneš hodnocení a bonus. Za vydělané peníze si v obchodě koupíš vylepšení a hudbu.
 
