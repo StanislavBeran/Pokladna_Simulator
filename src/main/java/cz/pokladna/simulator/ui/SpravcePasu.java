@@ -214,16 +214,8 @@ public class SpravcePasu extends JPanel {
                             int nahodneY = novaPolozka.getY() + sY(random.nextInt(101) - 50);
                             novaPolozka.nastavCil(odstavX(), nahodneY, PolozkaNaPase.Stav.JEDE_DO_ODSTAVNEHO_MISTA);
                         } else if (novaPolozka.zboziData.jeSkenovane()) {
-                            int naScanneru = 0;
-                            for (PolozkaNaPase p : aktivniPolozky) {
-                                if (p.stav == PolozkaNaPase.Stav.JEDE_NA_SCANNER || p.stav == PolozkaNaPase.Stav.CEKA_NA_SCANNERU) {
-                                    naScanneru++;
-                                }
-                            }
-                            int kapacita = (simulator != null && simulator.maDruhyScanner()) ? 2 : 1;
-                            if (naScanneru < kapacita) {
-                                int cilY = scannerY() + (naScanneru * sY(REF_VELIKOST_POLOZKY + 10));
-                                novaPolozka.nastavCil(scannerX(), cilY, PolozkaNaPase.Stav.JEDE_NA_SCANNER);
+                            if (scannerJeVolny()) {
+                                novaPolozka.nastavCil(scannerX(), scannerY(), PolozkaNaPase.Stav.JEDE_NA_SCANNER);
                             } else {
                                 if (simulator != null) simulator.vypisDoKonzole("Chyba: Scanner je momentálně obsazený!");
                             }
@@ -358,7 +350,6 @@ public class SpravcePasu extends JPanel {
                 animujKTargetu(p);
             }
         }
-        if (trpelivostBezi) repaint();
     }
 
     private void animujKTargetu(PolozkaNaPase p) {
@@ -425,19 +416,20 @@ public class SpravcePasu extends JPanel {
         return false;
     }
 
+    private boolean scannerJeVolny() {
+        for (PolozkaNaPase p : aktivniPolozky) {
+            if (p.stav == PolozkaNaPase.Stav.JEDE_NA_SCANNER || p.stav == PolozkaNaPase.Stav.CEKA_NA_SCANNERU) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void zpracujSpaceBar() {
         if (pauza) return;
         if (simulator != null && simulator.cekaNaPlatbu()) return;
 
-        int kapacita = (simulator != null && simulator.maDruhyScanner()) ? 2 : 1;
-
-        int naScanneru = 0;
-        for (PolozkaNaPase p : aktivniPolozky) {
-            if (p.stav == PolozkaNaPase.Stav.JEDE_NA_SCANNER || p.stav == PolozkaNaPase.Stav.CEKA_NA_SCANNERU)
-                naScanneru++;
-        }
-
-        if (naScanneru < kapacita) {
+        if (scannerJeVolny()) {
             PolozkaNaPase cil = null;
             for (PolozkaNaPase p : aktivniPolozky) {
                 if (p.idZakaznika == obsluhovanyZakaznik
@@ -447,8 +439,7 @@ public class SpravcePasu extends JPanel {
                 }
             }
             if (cil != null) {
-                int cilY = scannerY() + (naScanneru * sY(REF_VELIKOST_POLOZKY + 10));
-                cil.nastavCil(scannerX(), cilY, PolozkaNaPase.Stav.JEDE_NA_SCANNER);
+                cil.nastavCil(scannerX(), scannerY(), PolozkaNaPase.Stav.JEDE_NA_SCANNER);
                 return;
             }
         }
@@ -537,43 +528,5 @@ public class SpravcePasu extends JPanel {
         pauza = false;
         trpelivostBezi = false;
         repaint();
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (!trpelivostBezi) return;
-
-        PolozkaNaPase cil = null;
-        for (PolozkaNaPase p : aktivniPolozky) {
-            if (p.idZakaznika == obsluhovanyZakaznik
-                    && (p.stav == PolozkaNaPase.Stav.NA_PASE || p.stav == PolozkaNaPase.Stav.CEKA_NA_SCANNERU)) {
-                if (cil == null || p.getX() > cil.getX()) cil = p;
-            }
-        }
-        if (cil == null) return;
-
-        double pomer = getPomerTrpelivosti();
-
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        int sirkaLista = sX(70);
-        int vyskaLista = sY(10);
-        int x = cil.getX() + (cil.getWidth() - sirkaLista) / 2;
-        int y = cil.getY() - vyskaLista - sY(6);
-        if (y < 0) y = 0;
-
-        g2.setColor(new Color(0, 0, 0, 120));
-        g2.fillRoundRect(x - 1, y - 1, sirkaLista + 2, vyskaLista + 2, 6, 6);
-
-        int r = (int) (255 * (1.0 - pomer));
-        int zelena = (int) (200 * pomer);
-        g2.setColor(new Color(Math.min(255, r), Math.min(255, zelena + 55), 40));
-        g2.fillRoundRect(x, y, (int) (sirkaLista * pomer), vyskaLista, 6, 6);
-
-        String nalada = pomer > 0.6 ? "🙂" : (pomer > 0.3 ? "😐" : "😠");
-        g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, Math.max(10, sY(16))));
-        g2.drawString(nalada, x + sirkaLista + sX(4), y + vyskaLista);
     }
 }

@@ -6,14 +6,24 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.RectangularShape;
+import java.awt.geom.RoundRectangle2D;
 
 public class InteraktivniZona extends JPanel {
-    private int origX, origY, origW, origH;
-    private boolean jeKulaty;
-    private boolean isHovered = false;
-    private String nazev;
 
-    private PokladnaSimulator simulator;
+    private static final float KROK_NABEHU = 0.14f;
+    private static final float KROK_ZABLESKU = 0.08f;
+
+    private final int origX, origY, origW, origH;
+    private final boolean jeKulaty;
+    private final String nazev;
+    private final PokladnaSimulator simulator;
+    private final Timer animace;
+
+    private boolean nadZonou = false;
+    private float pruhlednost = 0f;
+    private float zablesk = 0f;
 
     public String getNazev() {
         return nazev;
@@ -36,17 +46,27 @@ public class InteraktivniZona extends JPanel {
         setCursor(new Cursor(Cursor.HAND_CURSOR));
         setToolTipText(nazev);
 
+        animace = new Timer(16, e -> krok());
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                isHovered = true;
-                repaint();
+                nadZonou = true;
+                spustAnimaci();
             }
+
             @Override
             public void mouseExited(MouseEvent e) {
-                isHovered = false;
-                repaint();
+                nadZonou = false;
+                spustAnimaci();
             }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                zablesk = 1f;
+                spustAnimaci();
+            }
+
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (nazev.equals("vypínač")) {
@@ -56,36 +76,55 @@ public class InteraktivniZona extends JPanel {
 
                     if (nazev.equals("Platební terminál")) {
                         SpravceZvuku.prehraj("pipnuti");
+                    } else if (jeKulaty) {
+                        SpravceZvuku.prehraj("mince");
                     } else {
-                        if (jeKulaty) {
-                            SpravceZvuku.prehraj("mince");
-                        } else {
-                            SpravceZvuku.prehraj("bankovka");
-                        }
+                        SpravceZvuku.prehraj("bankovka");
                     }
                 }
             }
         });
     }
 
+    private void spustAnimaci() {
+        if (!animace.isRunning()) animace.start();
+    }
+
+    private void krok() {
+        float cil = nadZonou ? 1f : 0f;
+        if (pruhlednost < cil) pruhlednost = Math.min(cil, pruhlednost + KROK_NABEHU);
+        else if (pruhlednost > cil) pruhlednost = Math.max(cil, pruhlednost - KROK_NABEHU);
+        zablesk = Math.max(0f, zablesk - KROK_ZABLESKU);
+
+        if (pruhlednost == cil && zablesk == 0f) animace.stop();
+        repaint();
+    }
+
     public void aktualizujPozici(double scaleW, double scaleH) {
-        setBounds((int)(origX * scaleW), (int)(origY * scaleH), (int)(origW * scaleW), (int)(origH * scaleH));
+        setBounds((int) (origX * scaleW), (int) (origY * scaleH), (int) (origW * scaleW), (int) (origH * scaleH));
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (isHovered) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(new Color(255, 255, 255, 100));
+        if (pruhlednost <= 0f && zablesk <= 0f) return;
 
-            if (jeKulaty) {
-                g2.fillOval(0, 0, getWidth(), getHeight());
-            } else {
-                g2.fillRect(0, 0, getWidth(), getHeight());
-            }
-            g2.dispose();
-        }
+        Graphics2D g2 = Vzhled.vyhlazene(g);
+        int w = getWidth(), h = getHeight();
+        float a = pruhlednost * (2f - pruhlednost);
+
+        RectangularShape tvar = jeKulaty
+                ? new Ellipse2D.Float(1, 1, w - 2, h - 2)
+                : new RoundRectangle2D.Float(1, 1, w - 2, h - 2, Math.min(w, h) * 0.3f, Math.min(w, h) * 0.3f);
+
+        int vypln = Math.min(255, (int) (50 * a + 110 * zablesk));
+        g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, Math.min(255, vypln + 25)),
+                0, h, new Color(255, 255, 255, Math.max(0, vypln - 15))));
+        g2.fill(tvar);
+
+        g2.setColor(new Color(255, 255, 255, Math.min(255, (int) (190 * a + 60 * zablesk))));
+        g2.setStroke(new BasicStroke(1.6f));
+        g2.draw(tvar);
+        g2.dispose();
     }
 }

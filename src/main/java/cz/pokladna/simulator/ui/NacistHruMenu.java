@@ -20,27 +20,30 @@ public class NacistHruMenu extends JPanel {
         Menu.BackgroundPanel bgPanel = okno.new BackgroundPanel("/pozadi.png");
         bgPanel.setLayout(new GridBagLayout());
 
-        JPanel mainContainer = new JPanel();
-        mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
+        JPanel mainContainer = new JPanel(new GridBagLayout());
         mainContainer.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
 
-        JLabel label = new JLabel("Uložené hry:");
-        label.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        JLabel label = new JLabel("Uložené hry");
+        label.setFont(new Font("Segoe UI", Font.BOLD, 28));
         label.setForeground(Color.WHITE);
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        mainContainer.add(label);
-        mainContainer.add(Box.createVerticalStrut(20));
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 20, 0);
+        mainContainer.add(label, gbc);
 
-        tlacitkaContainer = new JPanel();
-        tlacitkaContainer.setLayout(new BoxLayout(tlacitkaContainer, BoxLayout.Y_AXIS));
+        tlacitkaContainer = new JPanel(new GridBagLayout());
         tlacitkaContainer.setOpaque(false);
-        mainContainer.add(tlacitkaContainer);
-
-        mainContainer.add(Box.createVerticalStrut(20));
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 14, 0);
+        mainContainer.add(tlacitkaContainer, gbc);
 
         JButton btnZpet = Menu.vytvorTlacitko("Zpět do menu");
         btnZpet.addActionListener(e -> hlavniOkno.zobrazObrazovku("HLAVNI_MENU"));
-        mainContainer.add(btnZpet);
+        gbc.gridy = 2;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        mainContainer.add(btnZpet, gbc);
 
         bgPanel.add(mainContainer);
         add(bgPanel, BorderLayout.CENTER);
@@ -64,70 +67,125 @@ public class NacistHruMenu extends JPanel {
             boolean jePrazdny = SpravceSouboru.STAV_PRAZDNY.equals(hra.nazevObchodu)
                     || SpravceSouboru.STAV_CHYBA.equals(hra.nazevObchodu);
 
-            JPanel karta = vytvorKartuHry(i, hra, jePrazdny);
-            karta.setAlignmentX(Component.CENTER_ALIGNMENT);
-            tlacitkaContainer.add(karta);
-            tlacitkaContainer.add(Box.createVerticalStrut(10));
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridx = 0;
+            gbc.gridy = i - 1;
+            gbc.insets = new Insets(0, 0, 10, 0);
+            tlacitkaContainer.add(vytvorKartuHry(i, hra, jePrazdny), gbc);
         }
 
         tlacitkaContainer.revalidate();
         tlacitkaContainer.repaint();
     }
 
-    private JPanel vytvorKartuHry(int slot, UlozenaHra hra, boolean jePrazdny) {
-        JPanel karta = new JPanel(new BorderLayout(12, 0)) {
+    private JComponent vytvorKartuHry(int slot, UlozenaHra hra, boolean jePrazdny) {
+        boolean[] stav = new boolean[2];
+        JComponent karta = new JComponent() {
             @Override
             protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setPaint(new GradientPaint(0, 0, new Color(50, 50, 60, 220), 0, getHeight(), new Color(30, 30, 38, 220)));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
-                g2.setColor(new Color(255, 255, 255, 30));
-                g2.setStroke(new BasicStroke(1f));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                Graphics2D g2 = Vzhled.vyhlazene(g);
+                boolean hover = stav[0], stisk = stav[1];
+                int w = getWidth(), h = getHeight();
+                int posun = stisk ? 1 : 0;
+                float roh = 16;
+
+                if (jePrazdny) {
+                    g2.setColor(new Color(34, 38, 48, 170));
+                    g2.fill(new java.awt.geom.RoundRectangle2D.Float(1, 1, w - 2, h - 2, roh, roh));
+                    g2.setColor(new Color(255, 255, 255, 40));
+                    g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10f, new float[]{6f, 6f}, 0f));
+                    g2.draw(new java.awt.geom.RoundRectangle2D.Float(1, 1, w - 2, h - 2, roh, roh));
+                    kresliOdznakSlotu(g2, slot, 18, h, false);
+                    g2.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                    g2.setColor(Vzhled.TEXT_TLUMENY);
+                    FontMetrics fm = g2.getFontMetrics();
+                    g2.drawString("Prázdná pozice", 74, (h + fm.getAscent() - fm.getDescent()) / 2);
+                    g2.dispose();
+                    return;
+                }
+
+                if (hover && !stisk) Vzhled.kresliStin(g2, 4, 2, w - 8, h - 8, (int) roh);
+                Color pozadi = stisk ? new Color(40, 50, 72) : hover ? new Color(52, 62, 86) : new Color(34, 38, 48, 230);
+                g2.setColor(pozadi);
+                g2.fill(new java.awt.geom.RoundRectangle2D.Float(1, 1 + posun, w - 2, h - 2, roh, roh));
+                g2.setColor(hover ? Vzhled.AKCENT : new Color(255, 255, 255, 30));
+                g2.setStroke(new BasicStroke(hover ? 2f : 1f));
+                g2.draw(new java.awt.geom.RoundRectangle2D.Float(1, 1 + posun, w - 2, h - 2, roh, roh));
+
+                kresliOdznakSlotu(g2, slot, 18, h + 2 * posun, true);
+
+                int textX = 74;
+                int pravyOkraj = w - (hover ? 64 : 22);
+                Font fontNazev = new Font("Segoe UI", Font.BOLD, 17);
+                Font fontDetail = new Font("Segoe UI", Font.PLAIN, 13);
+                FontMetrics fmN = g2.getFontMetrics(fontNazev);
+                FontMetrics fmD = g2.getFontMetrics(fontDetail);
+                int y = (h - fmN.getHeight() - fmD.getHeight()) / 2 + fmN.getAscent() + posun;
+
+                g2.setFont(fontNazev);
+                g2.setColor(Vzhled.TEXT);
+                g2.drawString(Vzhled.zkrat(hra.nazevObchodu, fmN, pravyOkraj - textX), textX, y);
+
+                y += fmN.getDescent() + fmD.getAscent();
+                g2.setFont(fontDetail);
+                g2.setColor(Vzhled.TEXT_TLUMENY);
+                String detail = "Směna " + hra.cisloSmeny + "   ·   " + Vzhled.kc(hra.pocetPenez);
+                g2.drawString(Vzhled.zkrat(detail, fmD, pravyOkraj - textX), textX, y);
+
+                if (hover) {
+                    int d = 34;
+                    int x = w - d - 18, cy = (h - d) / 2 + posun;
+                    g2.setColor(Vzhled.AKCENT);
+                    g2.fill(new java.awt.geom.Ellipse2D.Float(x, cy, d, d));
+                    g2.setColor(Color.WHITE);
+                    java.awt.geom.Path2D.Float sipka = new java.awt.geom.Path2D.Float();
+                    sipka.moveTo(x + d * 0.4f, cy + d * 0.28f);
+                    sipka.lineTo(x + d * 0.72f, cy + d * 0.5f);
+                    sipka.lineTo(x + d * 0.4f, cy + d * 0.72f);
+                    sipka.closePath();
+                    g2.fill(sipka);
+                }
                 g2.dispose();
             }
         };
         karta.setOpaque(false);
-        karta.setMaximumSize(new Dimension(480, 72));
-        karta.setPreferredSize(new Dimension(480, 72));
-        karta.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+        Dimension velikost = new Dimension(500, 78);
+        karta.setPreferredSize(velikost);
+        karta.setMinimumSize(velikost);
         karta.setCursor(jePrazdny ? Cursor.getDefaultCursor() : new Cursor(Cursor.HAND_CURSOR));
 
-        if (jePrazdny) {
-            JLabel lbl = new JLabel("Pozice " + slot + " — prázdná");
-            lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            lbl.setForeground(new Color(140, 140, 140));
-            karta.add(lbl, BorderLayout.CENTER);
-        } else {
-            int level = (hra.xp / 100) + 1;
-
-            JPanel levy = new JPanel();
-            levy.setLayout(new BoxLayout(levy, BoxLayout.Y_AXIS));
-            levy.setOpaque(false);
-
-            JLabel lblNazev = new JLabel(hra.nazevObchodu);
-            lblNazev.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            lblNazev.setForeground(Color.WHITE);
-
-            JLabel lblDetail = new JLabel("Směna " + hra.cisloSmeny + "  •  " + hra.pocetPenez + " Kč  •  Level " + level);
-            lblDetail.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            lblDetail.setForeground(new Color(180, 180, 200));
-
-            levy.add(lblNazev);
-            levy.add(Box.createVerticalStrut(4));
-            levy.add(lblDetail);
-            karta.add(levy, BorderLayout.CENTER);
-
-            JLabel lblSlot = new JLabel("Slot " + slot);
-            lblSlot.setFont(new Font("Segoe UI", Font.BOLD, 12));
-            lblSlot.setForeground(new Color(100, 160, 255));
-            karta.add(lblSlot, BorderLayout.WEST);
-
+        if (!jePrazdny) {
             final int pozice = slot;
             karta.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    stav[0] = true;
+                    karta.repaint();
+                }
+
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    stav[0] = false;
+                    stav[1] = false;
+                    karta.repaint();
+                }
+
+                @Override
+                public void mousePressed(java.awt.event.MouseEvent e) {
+                    stav[1] = true;
+                    karta.repaint();
+                }
+
+                @Override
+                public void mouseReleased(java.awt.event.MouseEvent e) {
+                    stav[1] = false;
+                    karta.repaint();
+                }
+
+                @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {
+                    stav[0] = false;
+                    stav[1] = false;
                     PokladnaSimulator simulator = hlavniOkno.getSimulator();
                     simulator.nactiPenize(hra.pocetPenez);
                     simulator.nactiXp(hra.xp);
@@ -136,6 +194,8 @@ public class NacistHruMenu extends JPanel {
                     simulator.nactiStatistiky(hra.celkemObslouzeno, hra.nejlepsiKombo,
                             hra.nejlepsiTrzbaSmeny, hra.celkemVydelano, hra.cisloSmeny,
                             hra.trzbaSmeny, hra.cilSmeny);
+                    simulator.nactiStatistikySmeny(hra.zakazniciSmeny, hra.spokojeniSmeny,
+                            hra.nastvaniSmeny, hra.chybySmeny, hra.nejlepsiKomboSmeny);
                     simulator.nastavDetailyHry(pozice, hra.nazevObchodu, hra.vybranaHudba, hra.odemcenaHudba);
                     SpravceZvuku.zastav("obchodak_theme_sound");
                     if (!"Bez hudby".equals(hra.vybranaHudba)) {
@@ -144,20 +204,22 @@ public class NacistHruMenu extends JPanel {
                     hlavniOkno.zobrazObrazovku("POKLADNA_SIMULATOR");
                     simulator.spustSimulaci();
                 }
-                @Override
-                public void mouseEntered(java.awt.event.MouseEvent e) {
-                    karta.setBackground(new Color(60, 80, 120, 220));
-                    karta.repaint();
-                }
-                @Override
-                public void mouseExited(java.awt.event.MouseEvent e) {
-                    karta.repaint();
-                }
             });
         }
 
         return karta;
     }
 
-
+    private void kresliOdznakSlotu(Graphics2D g2, int slot, int x, int vyska, boolean aktivni) {
+        int d = 40;
+        int y = (vyska - d) / 2;
+        g2.setColor(aktivni ? new Color(58, 122, 232, 60) : new Color(255, 255, 255, 18));
+        g2.fill(new java.awt.geom.RoundRectangle2D.Float(x, y, d, d, 12, 12));
+        Font f = new Font("Segoe UI", Font.BOLD, 18);
+        FontMetrics fm = g2.getFontMetrics(f);
+        String text = String.valueOf(slot);
+        g2.setFont(f);
+        g2.setColor(aktivni ? Vzhled.AKCENT_HOVER : Vzhled.TEXT_TLUMENY);
+        g2.drawString(text, x + (d - fm.stringWidth(text)) / 2, y + (d + fm.getAscent() - fm.getDescent()) / 2);
+    }
 }

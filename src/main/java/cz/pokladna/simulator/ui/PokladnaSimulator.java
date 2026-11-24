@@ -21,8 +21,10 @@ public class PokladnaSimulator extends JPanel {
     List<Zbozi> zboziList = new ArrayList<>();
 
     private PokladnaObrazovka panelObrazovky;
-    private HerniPanel panelPenez;
+    private PenizePanel panelPenez;
     private TutorialPruvodce tutorial;
+    private KonecSmenyOkno konecSmeny;
+    private ZakaznikPanel zakaznikPanel;
     private boolean vypinacObrazovky = true;
     private NotifikacniBanner notifikacniBanner;
     private SmenaLista smenaLista;
@@ -42,11 +44,16 @@ public class PokladnaSimulator extends JPanel {
     private final int SCREEN_W = 420;
     private final int SCREEN_H = 218;
 
+    private static final int ZAKAZNIK_PRAVY_X = 1268;
+    private static final int ZAKAZNIK_LEVY_MIN_X = 918;
+    private static final int ZAKAZNIK_Y = 18;
+    private static final int ZAKAZNIK_VYSKA = 295;
+
     private AnimovanyGif pasGif;
     private final int PAS_X = 0;
     private final int PAS_Y = 362;
     private final int PAS_W = 596;
-    private final int PAS_H = 190;
+    private final int PAS_H = 191;
 
     private static final String iconPath = "/nastaveni.png";
     private static final String backgroundPath = "/pokladna.png";
@@ -86,9 +93,11 @@ public class PokladnaSimulator extends JPanel {
             spravcePasu = new SpravcePasu(zboziList, pasGif, this);
             vrstvy.add(spravcePasu, Integer.valueOf(3));
 
-            panelPenez = new HerniPanel(HerniPanel.Typ.PENIZE);
-            panelPenez.setPenize(1500);
+            panelPenez = new PenizePanel();
             vrstvy.add(panelPenez, Integer.valueOf(5));
+
+            zakaznikPanel = new ZakaznikPanel(() -> spravcePasu != null ? spravcePasu.getPomerTrpelivosti() : 1.0);
+            vrstvy.add(zakaznikPanel, Integer.valueOf(5));
 
 
             notifikacniBanner = new NotifikacniBanner();
@@ -107,6 +116,9 @@ public class PokladnaSimulator extends JPanel {
             obchodMenu = new ObchodMenu(this);
             obchodMenu.setVisible(false);
             vrstvy.add(obchodMenu, Integer.valueOf(9));
+
+            konecSmeny = new KonecSmenyOkno();
+            vrstvy.add(konecSmeny, Integer.valueOf(11));
 
             tutorial = new TutorialPruvodce(vytvorCileTutorialu(), () -> {
                 if (spravcePasu != null) spravcePasu.setTutorialRezim(false);
@@ -172,6 +184,7 @@ public class PokladnaSimulator extends JPanel {
 
         if (e.getID() == java.awt.event.KeyEvent.KEY_PRESSED) {
             if (panelObrazovky == null || !panelObrazovky.isVisible()) return false;
+            if (konecSmeny != null && konecSmeny.isVisible()) return true;
             if (herniMenu != null && herniMenu.isVisible()) return false;
             if (obchodMenu != null && obchodMenu.isVisible()) return false;
             if (potvrdTutorial()) return true;
@@ -291,17 +304,25 @@ public class PokladnaSimulator extends JPanel {
             panelObrazovky.setBounds((int)(SCREEN_X * scaleW), (int)(SCREEN_Y * scaleH),
                     (int)(SCREEN_W * scaleW), (int)(SCREEN_H * scaleH));
         }
+        int vyskaHud = (int) (42 * scaleH);
+        int horniOkraj = (int) (16 * scaleH);
         if (panelPenez != null) {
-            int sirkaBaru = (int)(280 * scaleW);
-            int vyskaBaru = (int)(60 * scaleH);
-            panelPenez.setBounds((int)(20 * scaleW), (int)(15 * scaleH), sirkaBaru, vyskaBaru);
+            panelPenez.setBounds((int) (20 * scaleW), horniOkraj, (int) (230 * scaleW), vyskaHud);
         }
         if (smenaLista != null) {
-            int sirka = (int)(580 * scaleW);
-            int vyska = (int)(22 * scaleH);
-            int x = (w - sirka) / 2;
-            int y = (int)(15 * scaleH);
-            smenaLista.setBounds(x, y, sirka, vyska);
+            int sirka = (int) (540 * scaleW);
+            smenaLista.setBounds((w - sirka) / 2, horniOkraj, sirka, vyskaHud);
+        }
+        if (zakaznikPanel != null) {
+            int pravyX = (int) (ZAKAZNIK_PRAVY_X * scaleW);
+            int maxSirka = pravyX - (int) (ZAKAZNIK_LEVY_MIN_X * scaleW);
+            int vyskaKarty = (int) (ZAKAZNIK_VYSKA * scaleH);
+            int sirkaKarty = (int) Math.round(vyskaKarty * ZakaznikPanel.POMER_STRAN);
+            if (sirkaKarty > maxSirka) {
+                sirkaKarty = maxSirka;
+                vyskaKarty = (int) Math.round(sirkaKarty / ZakaznikPanel.POMER_STRAN);
+            }
+            zakaznikPanel.setBounds(pravyX - sirkaKarty, (int) (ZAKAZNIK_Y * scaleH), sirkaKarty, vyskaKarty);
         }
         if (notifikacniBanner != null) {
             notifikacniBanner.setBounds(0, 0, w, h);
@@ -320,6 +341,9 @@ public class PokladnaSimulator extends JPanel {
         }
         if (obchodMenu != null) {
             obchodMenu.setBounds(0, 0, w, h);
+        }
+        if (konecSmeny != null) {
+            konecSmeny.setBounds(0, 0, w, h);
         }
         for (InteraktivniZona zona : hotspoty) {
             zona.aktualizujPozici(scaleW, scaleH);
@@ -392,6 +416,7 @@ public class PokladnaSimulator extends JPanel {
         if (spravcePasu != null) {
             spravcePasu.odstartujPas();
         }
+        if (zakaznikPanel != null) zakaznikPanel.novyZakaznik();
     }
     public void nactiPenize(int penize) {
         stav.setPenize(penize);
@@ -487,6 +512,8 @@ public class PokladnaSimulator extends JPanel {
     public void vypisDoKonzole(String text) {
         if (text.contains("Chyba")) {
             SpravceZvuku.prehraj("chyba");
+            boolean chybaVObchode = obchodMenu != null && obchodMenu.isVisible();
+            if (!chybaVObchode) stav.zaevidujChybuSmeny();
             String detail = text.startsWith("Chyba: ") ? text.substring(7) : text;
             if (notifikacniBanner != null) {
                 notifikacniBanner.zobraz(NotifikacniBanner.Typ.CHYBA, "Chyba", detail, 1400);
@@ -575,6 +602,7 @@ public class PokladnaSimulator extends JPanel {
                         panelVracenychPenez.vycistiHromadku();
                     }
                     SpravceZvuku.prehraj("chyba");
+                    stav.zaevidujChybuSmeny();
                     if (notifikacniBanner != null) {
                         notifikacniBanner.zobraz(NotifikacniBanner.Typ.CHYBA, "Příliš mnoho!", "Vracíš víc než máš. Reset na 0.", 1400);
                     }
@@ -602,6 +630,7 @@ public class PokladnaSimulator extends JPanel {
             } else if (spokojenost < PRAH_NASTVANI) {
                 stav.vynulujKombo();
             }
+            stav.zaevidujZakaznikaSmeny(spokojenost >= PRAH_SPOKOJENOSTI_KOMBO, spokojenost < PRAH_NASTVANI);
 
             double faktorSpokojenosti = 0.5 + 0.5 * spokojenost; 
             double nasobic = stav.getNasobicOdmen() * stav.getNasobicKomba() * faktorSpokojenosti;
@@ -639,21 +668,40 @@ public class PokladnaSimulator extends JPanel {
         if (spravcePasu != null) {
             spravcePasu.dokonciNakupAZacniNovy();
         }
+        if (zakaznikPanel != null) zakaznikPanel.novyZakaznik();
     }
 
 
-    private void oznamSplneniCile() {        int odmena = 300 + stav.getCisloSmeny() * 100;
-        nactiPenize(stav.getPenize() + odmena);
-        stav.setCisloSmeny(stav.getCisloSmeny() + 1);
-        stav.zahajNovouSmenu();
+    private void oznamSplneniCile() {
+        SouhrnSmeny souhrn = stav.uzavriSmenu();
+        nactiPenize(stav.getPenize());
         if (smenaLista != null) {
             smenaLista.aktualizuj(stav.getCisloSmeny(), stav.getTrzbaSmeny(), stav.getCilSmeny());
         }
-        if (notifikacniBanner != null) {
-            notifikacniBanner.zobraz(NotifikacniBanner.Typ.NOVA_SMENA,
-                    "Směna " + (stav.getCisloSmeny() - 1) + " splněna!",
-                    "Bonus " + odmena + " Kč  •  Začíná směna " + stav.getCisloSmeny(), 4500);
+        if (obchodMenu != null) obchodMenu.aktualizujNabidku();
+
+        if (konecSmeny == null) return;
+        if (spravcePasu != null) spravcePasu.pozastav();
+        if (notifikacniBanner != null) notifikacniBanner.skryj();
+        SpravceZvuku.prehraj("mince");
+
+        konecSmeny.zobraz(souhrn, noveOdemcitelneZbozi(stav.getCisloSmeny()), () -> {
+            obnovHru();
+            if (notifikacniBanner != null) {
+                notifikacniBanner.zobraz(NotifikacniBanner.Typ.NOVA_SMENA,
+                        "Směna " + stav.getCisloSmeny(), "Cíl " + Vzhled.kc(stav.getCilSmeny()), 2200);
+            }
+        }, this::zobrazObchod);
+    }
+
+    private List<String> noveOdemcitelneZbozi(int cisloSmeny) {
+        List<String> nove = new ArrayList<>();
+        for (Zbozi z : zboziList) {
+            if (z.lvlOdemknuti == cisloSmeny && !stav.getOdemceneZbozi().contains(z.id)) {
+                nove.add(z.nazev.replace('_', ' '));
+            }
         }
+        return nove;
     }
 
     private int vypocitejXpZaNakup(List<Zbozi> uctenka) {
@@ -721,6 +769,10 @@ public class PokladnaSimulator extends JPanel {
         stav.setCisloSmeny(cisloSmeny);
         stav.obnovRozehranouSmenu(trzbaSmeny, cilSmeny);
     }
+
+    public void nactiStatistikySmeny(int zakaznici, int spokojeni, int nastvani, int chyby, int nejlepsiKombo) {
+        stav.obnovStatistikySmeny(zakaznici, spokojeni, nastvani, chyby, nejlepsiKombo);
+    }
     public int getAktualniPenize() {
         return stav.getPenize();
     }
@@ -754,7 +806,9 @@ public class PokladnaSimulator extends JPanel {
                 stav.getCelkoveXp(), stav.getVylepseni(), stav.getOdemceneZbozi(), stav.getVybranaHudba(), stav.getOdemcenaHudba(),
                 stav.getCelkemObslouzeno(), stav.getNejlepsiKombo(), stav.getNejlepsiTrzbaSmeny(),
                 stav.getCelkemVydelano(), stav.getCisloSmeny(),
-                stav.getTrzbaSmeny(), stav.getCilSmeny());
+                stav.getTrzbaSmeny(), stav.getCilSmeny(),
+                stav.getZakazniciSmeny(), stav.getSpokojeniSmeny(), stav.getNastvaniSmeny(),
+                stav.getChybySmeny(), stav.getNejlepsiKomboSmeny());
         System.out.println("Hra byla úspěšně uložena!");
     }
     public void zobrazObchod() {
@@ -771,6 +825,7 @@ public class PokladnaSimulator extends JPanel {
 
     public void obnovHru() {
         if (tutorial != null && !tutorial.pasSmiBezet()) return;
+        if (konecSmeny != null && konecSmeny.isVisible()) return;
         if (spravcePasu != null && stav.jeHraNactena()) spravcePasu.obnov();
     }
     public int getUrovenRychlostiPasu() {
@@ -786,10 +841,6 @@ public class PokladnaSimulator extends JPanel {
 
     public double getNasobicTrpelivosti() {
         return stav.getNasobicTrpelivosti();
-    }
-
-    public boolean maDruhyScanner() {
-        return stav.maDruhyScanner();
     }
 
     public boolean maAutoSkenKusove() {
@@ -822,6 +873,8 @@ public class PokladnaSimulator extends JPanel {
     }
     public void resetujHerniPole() {
         if (tutorial != null) tutorial.zrus();
+        if (konecSmeny != null) konecSmeny.setVisible(false);
+        if (zakaznikPanel != null) zakaznikPanel.vycisti();
         stav.setHraNactena(false);
         cekaNaPlatbu = false;
         platbaKartou = false;

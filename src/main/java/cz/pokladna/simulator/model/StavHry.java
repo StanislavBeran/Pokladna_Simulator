@@ -15,9 +15,8 @@ public class StavHry {
     public enum Vylepseni {
         RYCHLOST_PASU(0, 4),      
         BONUS_ODMEN(1, 4),        
-        TRPELIVOST(2, 4), 
-        DRUHY_SCANNER(3, 1),      
-        AUTO_SKEN_KUSOVE(4, 1);   
+        TRPELIVOST(2, 4),
+        AUTO_SKEN_KUSOVE(4, 1);
 
         public final int pozice;
         public final int maxUroven;
@@ -53,6 +52,12 @@ public class StavHry {
     private int cilSmeny = 0;
     private int trzbaSmeny = 0;
     private int cisloSmeny = 1;
+
+    private int zakazniciSmeny = 0;
+    private int spokojeniSmeny = 0;
+    private int nastvaniSmeny = 0;
+    private int chybySmeny = 0;
+    private int nejlepsiKomboSmeny = 0;
 
     public int getPenize() {
         return penize;
@@ -141,10 +146,6 @@ public class StavHry {
 
     public double getNasobicTrpelivosti() {
         return 1.0 + 0.3 * getUrovenVylepseni(Vylepseni.TRPELIVOST);
-    }
-
-    public boolean maDruhyScanner() {
-        return getUrovenVylepseni(Vylepseni.DRUHY_SCANNER) >= 1;
     }
 
     public boolean maAutoSkenKusove() {
@@ -238,6 +239,7 @@ public class StavHry {
     public void zvysKombo() {
         komboSerie++;
         if (komboSerie > nejlepsiKombo) nejlepsiKombo = komboSerie;
+        if (komboSerie > nejlepsiKomboSmeny) nejlepsiKomboSmeny = komboSerie;
     }
 
     public void vynulujKombo() {
@@ -274,6 +276,70 @@ public class StavHry {
     public void zahajNovouSmenu() {
         cilSmeny = vypoctiCilSmeny(cisloSmeny, getLevel());
         trzbaSmeny = 0;
+        zakazniciSmeny = 0;
+        spokojeniSmeny = 0;
+        nastvaniSmeny = 0;
+        chybySmeny = 0;
+        nejlepsiKomboSmeny = komboSerie;
+    }
+
+    public void zaevidujZakaznikaSmeny(boolean spokojeny, boolean nastvany) {
+        zakazniciSmeny++;
+        if (spokojeny) spokojeniSmeny++;
+        if (nastvany) nastvaniSmeny++;
+    }
+
+    public void zaevidujChybuSmeny() {
+        chybySmeny++;
+    }
+
+    public void obnovStatistikySmeny(int zakaznici, int spokojeni, int nastvani, int chyby, int nejlepsiKombo) {
+        zakazniciSmeny = Math.max(0, zakaznici);
+        spokojeniSmeny = Math.max(0, Math.min(spokojeni, zakazniciSmeny));
+        nastvaniSmeny = Math.max(0, Math.min(nastvani, zakazniciSmeny));
+        chybySmeny = Math.max(0, chyby);
+        nejlepsiKomboSmeny = Math.max(0, nejlepsiKombo);
+    }
+
+    public int getZakazniciSmeny() { return zakazniciSmeny; }
+    public int getSpokojeniSmeny() { return spokojeniSmeny; }
+    public int getNastvaniSmeny() { return nastvaniSmeny; }
+    public int getChybySmeny() { return chybySmeny; }
+    public int getNejlepsiKomboSmeny() { return nejlepsiKomboSmeny; }
+
+    public static int vypoctiHodnoceni(int zakaznici, int spokojeni, int chyby) {
+        if (zakaznici <= 0) return 1;
+        double podilSpokojenych = (double) spokojeni / zakaznici;
+        double chybNaZakaznika = (double) chyby / zakaznici;
+        if (podilSpokojenych >= 0.8 && chybNaZakaznika <= 0.25) return 3;
+        if (podilSpokojenych >= 0.5 && chybNaZakaznika <= 0.75) return 2;
+        return 1;
+    }
+
+    public static double nasobicBonusu(int hvezdy) {
+        switch (hvezdy) {
+            case 3: return 2.0;
+            case 2: return 1.5;
+            default: return 1.0;
+        }
+    }
+
+    public static int zakladBonusu(int cisloSmeny) {
+        return 300 + cisloSmeny * 100;
+    }
+
+    public SouhrnSmeny uzavriSmenu() {
+        int hvezdy = vypoctiHodnoceni(zakazniciSmeny, spokojeniSmeny, chybySmeny);
+        double nasobic = nasobicBonusu(hvezdy);
+        int bonus = (int) Math.round(zakladBonusu(cisloSmeny) * nasobic);
+
+        SouhrnSmeny souhrn = new SouhrnSmeny(cisloSmeny, trzbaSmeny, cilSmeny, zakazniciSmeny,
+                spokojeniSmeny, nastvaniSmeny, chybySmeny, nejlepsiKomboSmeny, hvezdy, bonus, nasobic);
+
+        penize += bonus;
+        cisloSmeny++;
+        zahajNovouSmenu();
+        return souhrn;
     }
 
     /**
@@ -284,6 +350,11 @@ public class StavHry {
     public void obnovRozehranouSmenu(int ulozenaTrzba, int ulozenyCil) {
         trzbaSmeny = Math.max(0, ulozenaTrzba);
         cilSmeny = (ulozenyCil > 0) ? ulozenyCil : vypoctiCilSmeny(cisloSmeny, getLevel());
+        zakazniciSmeny = 0;
+        spokojeniSmeny = 0;
+        nastvaniSmeny = 0;
+        chybySmeny = 0;
+        nejlepsiKomboSmeny = 0;
     }
 
     public static int vypoctiCilSmeny(int cisloSmeny, int level) {

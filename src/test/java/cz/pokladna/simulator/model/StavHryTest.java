@@ -67,12 +67,12 @@ class StavHryTest {
     @Test
     void prepinatelneVylepseniMaMaximumJedna() {
         StavHry s = new StavHry();
-        assertFalse(s.maDruhyScanner());
+        assertFalse(s.maAutoSkenKusove());
 
-        assertEquals(1, s.zvysUrovenVylepseni(StavHry.Vylepseni.DRUHY_SCANNER));
-        assertTrue(s.maDruhyScanner());
+        assertEquals(1, s.zvysUrovenVylepseni(StavHry.Vylepseni.AUTO_SKEN_KUSOVE));
+        assertTrue(s.maAutoSkenKusove());
 
-        assertEquals(-1, s.zvysUrovenVylepseni(StavHry.Vylepseni.DRUHY_SCANNER));
+        assertEquals(-1, s.zvysUrovenVylepseni(StavHry.Vylepseni.AUTO_SKEN_KUSOVE));
     }
 
     @Test

@@ -22,6 +22,12 @@ public class UlozenaHra {
     public int trzbaSmeny;
     public int cilSmeny;
 
+    public int zakazniciSmeny;
+    public int spokojeniSmeny;
+    public int nastvaniSmeny;
+    public int chybySmeny;
+    public int nejlepsiKomboSmeny;
+
     public UlozenaHra(String nazevObchodu, int pocetPenez, int xp,  String vylepseni,  List<Integer> odemceneZbozi, String vybranaHudba, List<String> odemcenaHudba) {
         this.nazevObchodu = nazevObchodu;
         this.pocetPenez = pocetPenez;

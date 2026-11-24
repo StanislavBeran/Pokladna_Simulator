@@ -60,6 +60,11 @@ public class SpravceSouboru {
         int cisloSmeny = 1;
         int trzbaSmeny = 0;
         int cilSmeny = 0;
+        int zakazniciSmeny = 0;
+        int spokojeniSmeny = 0;
+        int nastvaniSmeny = 0;
+        int chybySmeny = 0;
+        int nejlepsiKomboSmeny = 0;
 
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(new FileInputStream(soubor), StandardCharsets.UTF_8))) {
@@ -101,6 +106,16 @@ public class SpravceSouboru {
                             }
                         } else if (radek.startsWith("CelkemObslouzeno")) {
                             celkemObslouzeno = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("NejlepsiKomboSmeny")) {
+                            nejlepsiKomboSmeny = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("ZakazniciSmeny")) {
+                            zakazniciSmeny = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("SpokojeniSmeny")) {
+                            spokojeniSmeny = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("NastvaniSmeny")) {
+                            nastvaniSmeny = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("ChybySmeny")) {
+                            chybySmeny = Integer.parseInt(hodnota);
                         } else if (radek.startsWith("NejlepsiKombo")) {
                             nejlepsiKombo = Integer.parseInt(hodnota);
                         } else if (radek.startsWith("NejlepsiTrzbaSmeny")) {
@@ -127,6 +142,11 @@ public class SpravceSouboru {
             vysledek.cisloSmeny = cisloSmeny;
             vysledek.trzbaSmeny = trzbaSmeny;
             vysledek.cilSmeny = cilSmeny;
+            vysledek.zakazniciSmeny = zakazniciSmeny;
+            vysledek.spokojeniSmeny = spokojeniSmeny;
+            vysledek.nastvaniSmeny = nastvaniSmeny;
+            vysledek.chybySmeny = chybySmeny;
+            vysledek.nejlepsiKomboSmeny = nejlepsiKomboSmeny;
             return vysledek;
         } catch (IOException e) {
             System.err.println("Chyba při čtení uložené hry (" + cesta + "): " + e.getMessage());
@@ -136,13 +156,15 @@ public class SpravceSouboru {
 
     public static void ulozHruDoSouboru(int slot, String jmeno, String penize, int xp, String vylepseni, List<Integer> odemceneZbozi, String vybranaHudba, List<String> odemcenaHudba) {
         ulozHruDoSouboru(slot, jmeno, penize, xp, vylepseni, odemceneZbozi, vybranaHudba, odemcenaHudba,
-                0, 0, 0, 0, 1, 0, 0);
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
     }
 
     public static void ulozHruDoSouboru(int slot, String jmeno, String penize, int xp, String vylepseni,
                                         List<Integer> odemceneZbozi, String vybranaHudba, List<String> odemcenaHudba,
                                         int celkemObslouzeno, int nejlepsiKombo, int nejlepsiTrzbaSmeny,
-                                        int celkemVydelano, int cisloSmeny, int trzbaSmeny, int cilSmeny) {
+                                        int celkemVydelano, int cisloSmeny, int trzbaSmeny, int cilSmeny,
+                                        int zakazniciSmeny, int spokojeniSmeny, int nastvaniSmeny,
+                                        int chybySmeny, int nejlepsiKomboSmeny) {
         if (odemceneZbozi == null) {
             odemceneZbozi = new ArrayList<>();
             odemceneZbozi.add(16);
@@ -177,6 +199,11 @@ public class SpravceSouboru {
             writer.println("CisloSmeny: " + cisloSmeny + ";");
             writer.println("TrzbaSmeny: " + trzbaSmeny + ";");
             writer.println("CilSmeny: " + cilSmeny + ";");
+            writer.println("ZakazniciSmeny: " + zakazniciSmeny + ";");
+            writer.println("SpokojeniSmeny: " + spokojeniSmeny + ";");
+            writer.println("NastvaniSmeny: " + nastvaniSmeny + ";");
+            writer.println("ChybySmeny: " + chybySmeny + ";");
+            writer.println("NejlepsiKomboSmeny: " + nejlepsiKomboSmeny + ";");
 
             System.out.println("Hra uložena do slotu: " + slot);
         } catch (IOException ex) {

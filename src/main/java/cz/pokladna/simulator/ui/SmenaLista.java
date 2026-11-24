@@ -2,84 +2,101 @@ package cz.pokladna.simulator.ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 
 public class SmenaLista extends JPanel {
 
     private int cisloSmeny = 1;
-    private int trzba      = 0;
-    private int cil        = 1000;
-
-    private static final Color BARVA_POZADI  = new Color(20, 20, 30, 210);
-    private static final Color BARVA_FILL    = new Color(50, 160, 255, 220);
-    private static final Color BARVA_FILL_OK = new Color(40, 200, 90, 220);
-    private static final Color BARVA_TEXT    = new Color(230, 230, 230);
-    private static final Font  FONT_LABEL    = new Font("Segoe UI", Font.BOLD, 12);
+    private int trzba = 0;
+    private int cil = 1000;
+    private double zobrazenyPodil = 0;
+    private final Timer animace;
 
     public SmenaLista() {
         setOpaque(false);
+        animace = new Timer(16, e -> krok());
     }
 
     public void aktualizuj(int cisloSmeny, int trzba, int cil) {
+        boolean novaSmena = cisloSmeny != this.cisloSmeny;
         this.cisloSmeny = cisloSmeny;
-        this.trzba      = trzba;
-        this.cil        = cil > 0 ? cil : 1;
+        this.trzba = trzba;
+        this.cil = cil > 0 ? cil : 1;
+        if (novaSmena || !isShowing()) {
+            zobrazenyPodil = cilovyPodil();
+            repaint();
+        } else if (!animace.isRunning()) {
+            animace.start();
+        }
+    }
+
+    private double cilovyPodil() {
+        return Math.min(1.0, (double) trzba / cil);
+    }
+
+    private void krok() {
+        double rozdil = cilovyPodil() - zobrazenyPodil;
+        if (Math.abs(rozdil) < 0.002) {
+            zobrazenyPodil = cilovyPodil();
+            animace.stop();
+        } else {
+            zobrazenyPodil += rozdil * 0.12;
+        }
         repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-        int w = getWidth();
-        int h = getHeight();
-        int roh = 8;
-
-        g2.setColor(BARVA_POZADI);
-        g2.fillRoundRect(0, 0, w, h, roh, roh);
-
-        int padX = 6, padY = 4;
-        int barW = w - 2 * padX;
-        int barH = h - 2 * padY;
-        int barRoh = 5;
-
-        g2.setColor(new Color(10, 10, 20, 180));
-        g2.fillRoundRect(padX, padY, barW, barH, barRoh, barRoh);
-
-        double podil = Math.min(1.0, (double) trzba / cil);
-        int fillW = (int)(barW * podil);
+        Graphics2D g2 = Vzhled.vyhlazene(g);
+        int w = getWidth(), h = getHeight();
         boolean splneno = trzba >= cil;
-        Color fillColor = splneno ? BARVA_FILL_OK : BARVA_FILL;
 
-        if (fillW > 0) {
-            g2.setColor(fillColor);
-            g2.fillRoundRect(padX, padY, fillW, barH, barRoh, barRoh);
+        g2.setColor(new Color(18, 21, 28, 225));
+        g2.fill(new RoundRectangle2D.Float(0, 0, w, h, h, h));
+        g2.setColor(new Color(255, 255, 255, 30));
+        g2.draw(new RoundRectangle2D.Float(0.5f, 0.5f, w - 1, h - 1, h, h));
 
-            g2.setColor(new Color(255, 255, 255, 40));
-            g2.fillRoundRect(padX, padY, fillW, barH / 2, barRoh, barRoh);
+        int okraj = (int) (h * 0.16);
+        int vnitrniH = h - 2 * okraj;
+
+        Font fontOdznak = new Font("Segoe UI", Font.BOLD, Math.max(9, (int) (h * 0.3)));
+        FontMetrics fmO = g2.getFontMetrics(fontOdznak);
+        String odznak = "SMĚNA " + cisloSmeny;
+        int odznakW = fmO.stringWidth(odznak) + (int) (h * 0.6);
+        g2.setColor(splneno ? Vzhled.ZELENA : Vzhled.AKCENT);
+        g2.fill(new RoundRectangle2D.Float(okraj, okraj, odznakW, vnitrniH, vnitrniH, vnitrniH));
+        g2.setFont(fontOdznak);
+        g2.setColor(Color.WHITE);
+        g2.drawString(odznak, okraj + (odznakW - fmO.stringWidth(odznak)) / 2, (h + fmO.getAscent() - fmO.getDescent()) / 2);
+
+        Font fontHodnota = new Font("Segoe UI", Font.BOLD, Math.max(9, (int) (h * 0.32)));
+        FontMetrics fmH = g2.getFontMetrics(fontHodnota);
+        String hodnota = splneno ? "Cíl splněn" : Vzhled.kc(trzba).replace("\u00A0Kč", "") + " / " + Vzhled.kc(cil);
+        int hodnotaW = fmH.stringWidth(hodnota);
+        int hodnotaX = w - okraj - (int) (h * 0.3) - hodnotaW;
+        g2.setFont(fontHodnota);
+        g2.setColor(splneno ? new Color(120, 230, 160) : Vzhled.TEXT);
+        g2.drawString(hodnota, hodnotaX, (h + fmH.getAscent() - fmH.getDescent()) / 2);
+
+        int barX = okraj + odznakW + (int) (h * 0.3);
+        int barW = hodnotaX - (int) (h * 0.3) - barX;
+        int barH = Math.max(6, (int) (h * 0.26));
+        int barY = (h - barH) / 2;
+        if (barW > 10) {
+            g2.setColor(new Color(255, 255, 255, 22));
+            g2.fill(new RoundRectangle2D.Float(barX, barY, barW, barH, barH, barH));
+
+            int fillW = (int) Math.round(barW * zobrazenyPodil);
+            if (fillW > 0) {
+                fillW = Math.max(fillW, barH);
+                Color zacatek = splneno ? new Color(38, 166, 92) : new Color(58, 122, 232);
+                Color konec = splneno ? new Color(110, 220, 150) : new Color(90, 200, 250);
+                g2.setPaint(new GradientPaint(barX, 0, zacatek, barX + barW, 0, konec));
+                g2.fill(new RoundRectangle2D.Float(barX, barY, fillW, barH, barH, barH));
+                g2.setColor(new Color(255, 255, 255, 50));
+                g2.fill(new RoundRectangle2D.Float(barX, barY, fillW, barH / 2f, barH / 2f, barH / 2f));
+            }
         }
-
-        // "Směna 2  •  1 250 / 2 000 Kč"
-        g2.setFont(FONT_LABEL);
-        FontMetrics fm = g2.getFontMetrics();
-        String label = "Směna " + cisloSmeny + "  •  " + trzba + " / " + cil + " Kč";
-        int tx = padX + 6;
-        int ty = padY + (barH + fm.getAscent() - fm.getDescent()) / 2;
-
-        g2.setColor(new Color(0, 0, 0, 120));
-        g2.drawString(label, tx + 1, ty + 1);
-        g2.setColor(BARVA_TEXT);
-        g2.drawString(label, tx, ty);
-
-        if (splneno) {
-            String check = "✓";
-            int cx = padX + barW - fm.stringWidth(check) - 6;
-            g2.setColor(new Color(100, 255, 130, 220));
-            g2.drawString(check, cx, ty);
-        }
-
         g2.dispose();
     }
 }
