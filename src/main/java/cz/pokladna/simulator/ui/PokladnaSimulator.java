@@ -646,7 +646,8 @@ public class PokladnaSimulator extends JPanel {
         stav.setVybranaHudba(vybrana);
         stav.setOdemcenaHudba(odemcena);
 
-        stav.zahajNovouSmenu();
+        // Směna se tady už nezakládá znovu: rozehraná tržba a cíl se obnovují
+        // v nactiStatistiky(...), aby se po načtení nezačínalo od nuly.
         stav.vynulujKombo();
         if (smenaLista != null) {
             smenaLista.aktualizuj(stav.getCisloSmeny(), stav.getTrzbaSmeny(), stav.getCilSmeny());
@@ -654,13 +655,19 @@ public class PokladnaSimulator extends JPanel {
     }
 
 
+    /**
+     * Načte statistiky a rozehranou směnu. Musí se volat po nactiXp (cíl se
+     * případně dopočítává z levelu) a před nastavDetailyHry (ta jen překreslí lištu).
+     * Pro novou hru předej nuly, číslo směny 1 a tržbu/cíl 0.
+     */
     public void nactiStatistiky(int celkemObslouzeno, int nejlepsiKombo, int nejlepsiTrzbaSmeny,
-                                int celkemVydelano, int cisloSmeny) {
+                                int celkemVydelano, int cisloSmeny, int trzbaSmeny, int cilSmeny) {
         stav.setCelkemObslouzeno(celkemObslouzeno);
         stav.setNejlepsiKombo(nejlepsiKombo);
         stav.setNejlepsiTrzbaSmeny(nejlepsiTrzbaSmeny);
         stav.setCelkemVydelano(celkemVydelano);
         stav.setCisloSmeny(cisloSmeny);
+        stav.obnovRozehranouSmenu(trzbaSmeny, cilSmeny);
     }
     public int getAktualniPenize() {
         return stav.getPenize();
@@ -694,7 +701,8 @@ public class PokladnaSimulator extends JPanel {
         SpravceSouboru.ulozHruDoSouboru(stav.getAktualniSlot(), stav.getJmenoObchodu(), String.valueOf(stav.getPenize()),
                 stav.getCelkoveXp(), stav.getVylepseni(), stav.getOdemceneZbozi(), stav.getVybranaHudba(), stav.getOdemcenaHudba(),
                 stav.getCelkemObslouzeno(), stav.getNejlepsiKombo(), stav.getNejlepsiTrzbaSmeny(),
-                stav.getCelkemVydelano(), stav.getCisloSmeny());
+                stav.getCelkemVydelano(), stav.getCisloSmeny(),
+                stav.getTrzbaSmeny(), stav.getCilSmeny());
         System.out.println("Hra byla úspěšně uložena!");
     }
     public void zobrazObchod() {

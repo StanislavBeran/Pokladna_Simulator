@@ -18,6 +18,10 @@ public class UlozenaHra {
     public int celkemVydelano;
     public int cisloSmeny = 1;
 
+    // Rozehraná směna: dosažená tržba a cíl (0 = neuloženo, starší uložená hra).
+    public int trzbaSmeny;
+    public int cilSmeny;
+
     public UlozenaHra(String nazevObchodu, int pocetPenez, int xp,  String vylepseni,  List<Integer> odemceneZbozi, String vybranaHudba, List<String> odemcenaHudba) {
         this.nazevObchodu = nazevObchodu;
         this.pocetPenez = pocetPenez;

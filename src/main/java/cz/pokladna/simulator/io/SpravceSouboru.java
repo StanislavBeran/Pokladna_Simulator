@@ -58,6 +58,8 @@ public class SpravceSouboru {
         int nejlepsiTrzbaSmeny = 0;
         int celkemVydelano = 0;
         int cisloSmeny = 1;
+        int trzbaSmeny = 0;
+        int cilSmeny = 0;
 
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(new FileInputStream(soubor), StandardCharsets.UTF_8))) {
@@ -107,6 +109,10 @@ public class SpravceSouboru {
                             celkemVydelano = Integer.parseInt(hodnota);
                         } else if (radek.startsWith("CisloSmeny")) {
                             cisloSmeny = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("TrzbaSmeny")) {
+                            trzbaSmeny = Integer.parseInt(hodnota);
+                        } else if (radek.startsWith("CilSmeny")) {
+                            cilSmeny = Integer.parseInt(hodnota);
                         }
                     } catch (NumberFormatException e) {
                         System.err.println("Přeskakuji poškozený řádek v uložené hře (" + cesta + "): " + radek);
@@ -119,6 +125,8 @@ public class SpravceSouboru {
             vysledek.nejlepsiTrzbaSmeny = nejlepsiTrzbaSmeny;
             vysledek.celkemVydelano = celkemVydelano;
             vysledek.cisloSmeny = cisloSmeny;
+            vysledek.trzbaSmeny = trzbaSmeny;
+            vysledek.cilSmeny = cilSmeny;
             return vysledek;
         } catch (IOException e) {
             System.err.println("Chyba při čtení uložené hry (" + cesta + "): " + e.getMessage());
@@ -128,13 +136,13 @@ public class SpravceSouboru {
 
     public static void ulozHruDoSouboru(int slot, String jmeno, String penize, int xp, String vylepseni, List<Integer> odemceneZbozi, String vybranaHudba, List<String> odemcenaHudba) {
         ulozHruDoSouboru(slot, jmeno, penize, xp, vylepseni, odemceneZbozi, vybranaHudba, odemcenaHudba,
-                0, 0, 0, 0, 1);
+                0, 0, 0, 0, 1, 0, 0);
     }
 
     public static void ulozHruDoSouboru(int slot, String jmeno, String penize, int xp, String vylepseni,
                                         List<Integer> odemceneZbozi, String vybranaHudba, List<String> odemcenaHudba,
                                         int celkemObslouzeno, int nejlepsiKombo, int nejlepsiTrzbaSmeny,
-                                        int celkemVydelano, int cisloSmeny) {
+                                        int celkemVydelano, int cisloSmeny, int trzbaSmeny, int cilSmeny) {
         if (odemceneZbozi == null) {
             odemceneZbozi = new ArrayList<>();
             odemceneZbozi.add(16);
@@ -167,6 +175,8 @@ public class SpravceSouboru {
             writer.println("NejlepsiTrzbaSmeny: " + nejlepsiTrzbaSmeny + ";");
             writer.println("CelkemVydelano: " + celkemVydelano + ";");
             writer.println("CisloSmeny: " + cisloSmeny + ";");
+            writer.println("TrzbaSmeny: " + trzbaSmeny + ";");
+            writer.println("CilSmeny: " + cilSmeny + ";");
 
             System.out.println("Hra uložena do slotu: " + slot);
         } catch (IOException ex) {

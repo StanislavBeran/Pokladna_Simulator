@@ -170,4 +170,35 @@ class StavHryTest {
         assertEquals(500, s.getTrzbaSmeny());
         assertEquals(500, s.getNejlepsiTrzbaSmeny());
     }
+
+    @Test
+    void obnovRozehranouSmenuZachovaTrzbuACil() {
+        StavHry s = new StavHry();
+        s.setCisloSmeny(3);
+
+        s.obnovRozehranouSmenu(450, 1700);
+
+        assertEquals(450, s.getTrzbaSmeny());
+        assertEquals(1700, s.getCilSmeny());
+        assertFalse(s.jeCilSmenySplnen());
+    }
+
+    @Test
+    void obnovRozehranouSmenuDopocitaChybejiciCil() {
+        StavHry s = new StavHry();
+        s.setCisloSmeny(2);
+
+        // Starší uložená hra nemá cíl uložený (0) - dopočítá se z čísla směny a levelu.
+        s.obnovRozehranouSmenu(100, 0);
+
+        assertEquals(StavHry.vypoctiCilSmeny(2, s.getLevel()), s.getCilSmeny());
+        assertEquals(100, s.getTrzbaSmeny());
+    }
+
+    @Test
+    void obnovRozehranouSmenuNepustiZapornouTrzbu() {
+        StavHry s = new StavHry();
+        s.obnovRozehranouSmenu(-50, 900);
+        assertEquals(0, s.getTrzbaSmeny());
+    }
 }

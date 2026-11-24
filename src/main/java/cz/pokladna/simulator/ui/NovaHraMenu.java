@@ -69,6 +69,8 @@ public class NovaHraMenu extends JPanel {
                 simulator.nactiXp(0);
                 simulator.nactiVylepseni("00000");
                 simulator.nactiOdemceneZbozi(startovniZbozi);
+                // Nová hra: čisté statistiky a první směna (cíl se dopočítá z levelu).
+                simulator.nactiStatistiky(0, 0, 0, 0, 1, 0, 0);
                 simulator.nastavDetailyHry(indexSlotu, jmenoHry, "obchod_theme", null);
                 SpravceZvuku.zastav("obchodak_theme_sound");
                 SpravceZvuku.prehraj("hra_hudba_v_pozadi", "obchod_theme", 0, true);

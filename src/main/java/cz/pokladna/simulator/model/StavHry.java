@@ -276,6 +276,16 @@ public class StavHry {
         trzbaSmeny = 0;
     }
 
+    /**
+     * Obnoví rozehranou směnu z uložené hry (bez nulování tržby).
+     * Pokud uložený cíl chybí (starší uložená hra, cíl <= 0), dopočítá se
+     * z čísla směny a aktuálního levelu. Tržba se zastropuje na nezáporné číslo.
+     */
+    public void obnovRozehranouSmenu(int ulozenaTrzba, int ulozenyCil) {
+        trzbaSmeny = Math.max(0, ulozenaTrzba);
+        cilSmeny = (ulozenyCil > 0) ? ulozenyCil : vypoctiCilSmeny(cisloSmeny, getLevel());
+    }
+
     public static int vypoctiCilSmeny(int cisloSmeny, int level) {
         int zaklad = 800 + (cisloSmeny - 1) * 400;
         zaklad += (level - 1) * 150;
