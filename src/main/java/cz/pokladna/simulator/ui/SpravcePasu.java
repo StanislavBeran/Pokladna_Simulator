@@ -45,6 +45,7 @@ public class SpravcePasu extends JPanel {
     private int zbyvaTrpelivost = 1;
     private boolean trpelivostBezi = false;
     private boolean pauza = false;
+    private boolean tutorialRezim = false;
 
     public SpravcePasu(List<Zbozi> zbozi, AnimovanyGif pasGif, PokladnaSimulator simulator) {
         this.zboziList = zbozi;
@@ -148,7 +149,7 @@ public class SpravcePasu extends JPanel {
     }
 
     private void tikTrpelivosti() {
-        if (pauza) return;
+        if (pauza || tutorialRezim) return;
         if (trpelivostBezi && zbyvaTrpelivost > 0) {
             zbyvaTrpelivost--;
         }
@@ -373,11 +374,32 @@ public class SpravcePasu extends JPanel {
             if (p.stav == PolozkaNaPase.Stav.JEDE_NA_SCANNER) {
                 p.stav = PolozkaNaPase.Stav.CEKA_NA_SCANNERU;
                 SpravceZvuku.prehraj("move");
-                if (simulator != null) simulator.zobrazVahu(p.vaha);
+                if (simulator != null) {
+                    simulator.zobrazVahu(p.vaha);
+                    simulator.polozkaDojelaNaScanner(p.zboziData, p.pocetKusu, p.vaha);
+                }
             } else if (p.stav == PolozkaNaPase.Stav.JEDE_DO_ODSTAVNEHO_MISTA) {
                 p.stav = PolozkaNaPase.Stav.V_ODSTAVNEM_MISTE;
             }
         }
+    }
+
+    public void setTutorialRezim(boolean zapnuto) {
+        this.tutorialRezim = zapnuto;
+    }
+
+    public void nastavVelikostNakupu(int pocet) {
+        this.velikostNakupu = Math.max(1, pocet);
+    }
+
+    public Rectangle ohraniceniNaPase(boolean delitko) {
+        PolozkaNaPase cil = null;
+        for (PolozkaNaPase p : aktivniPolozky) {
+            if (p.idZakaznika != obsluhovanyZakaznik || p.stav != PolozkaNaPase.Stav.NA_PASE) continue;
+            if ((p.zboziData.id == -1) != delitko) continue;
+            if (cil == null || p.getX() > cil.getX()) cil = p;
+        }
+        return cil == null ? null : cil.getBounds();
     }
 
     public boolean overAOdjedZeScanneru(int idZbozi, int zadanaHodnota) {

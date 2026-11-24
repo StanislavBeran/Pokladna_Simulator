@@ -22,7 +22,7 @@ public class PokladnaSimulator extends JPanel {
 
     private PokladnaObrazovka panelObrazovky;
     private HerniPanel panelPenez;
-    private InformacniOkno informacniOkno;
+    private TutorialPruvodce tutorial;
     private boolean vypinacObrazovky = true;
     private NotifikacniBanner notifikacniBanner;
     private SmenaLista smenaLista;
@@ -108,13 +108,10 @@ public class PokladnaSimulator extends JPanel {
             obchodMenu.setVisible(false);
             vrstvy.add(obchodMenu, Integer.valueOf(9));
 
-            informacniOkno = new InformacniOkno(() -> {
-                if (spravcePasu != null) {
-                    spravcePasu.odstartujPas();
-                }
+            tutorial = new TutorialPruvodce(vytvorCileTutorialu(), () -> {
+                if (spravcePasu != null) spravcePasu.setTutorialRezim(false);
             });
-            informacniOkno.setVisible(false);
-            vrstvy.add(informacniOkno, Integer.valueOf(6));
+            vrstvy.add(tutorial, Integer.valueOf(7));
 
             ImageIcon settingsIcon = new ImageIcon(getClass().getResource(iconPath));
             Image scaledImg = settingsIcon.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
@@ -171,11 +168,13 @@ public class PokladnaSimulator extends JPanel {
 
     public boolean dispatchKlavesa(java.awt.event.KeyEvent e) {
         if (e.getKeyCode() != java.awt.event.KeyEvent.VK_SPACE) return false;
-       
+        if (panelObrazovky != null && panelObrazovky.piseDoVyhledavani()) return false;
+
         if (e.getID() == java.awt.event.KeyEvent.KEY_PRESSED) {
             if (panelObrazovky == null || !panelObrazovky.isVisible()) return false;
             if (herniMenu != null && herniMenu.isVisible()) return false;
             if (obchodMenu != null && obchodMenu.isVisible()) return false;
+            if (potvrdTutorial()) return true;
             if (spravcePasu != null) spravcePasu.zpracujSpaceBar();
         }
         return true;
@@ -325,8 +324,8 @@ public class PokladnaSimulator extends JPanel {
         for (InteraktivniZona zona : hotspoty) {
             zona.aktualizujPozici(scaleW, scaleH);
         }
-        if (informacniOkno != null) {
-            informacniOkno.setBounds(0, 0, w, h);
+        if (tutorial != null) {
+            tutorial.setBounds(0, 0, w, h);
         }
         revalidate();
         repaint();
@@ -338,9 +337,15 @@ public class PokladnaSimulator extends JPanel {
     }
     public boolean overZboziZeScanneru(int id, int mnozstvi) {
         if (spravcePasu != null) {
-            return spravcePasu.overAOdjedZeScanneru(id, mnozstvi);
+            boolean spravne = spravcePasu.overAOdjedZeScanneru(id, mnozstvi);
+            if (spravne && tutorial != null) tutorial.kodPotvrzen();
+            return spravne;
         }
         return false;
+    }
+
+    public void polozkaDojelaNaScanner(Zbozi z, int pocetKusu, int vaha) {
+        if (tutorial != null) tutorial.polozkaNaScanneru(z, pocetKusu, vaha);
     }
     private void toggleFullscreen() {
         int ulozenaKategorie = panelObrazovky.getAktualniKategorie();
@@ -413,10 +418,63 @@ public class PokladnaSimulator extends JPanel {
             obchodMenu.aktualizujNabidku();
         }
     }
-    public void zobrazNavodANastartujHru() {
-        if (informacniOkno != null) {
-            informacniOkno.setVisible(true);
+    public void zahajTutorial() {
+        if (tutorial == null) return;
+        if (spravcePasu != null) spravcePasu.setTutorialRezim(true);
+        tutorial.spust();
+    }
+
+    private TutorialPruvodce.Cile vytvorCileTutorialu() {
+        return new TutorialPruvodce.Cile() {
+            @Override public Rectangle smenaLista() { return naTutorial(smenaLista); }
+            @Override public Rectangle penize() { return naTutorial(panelPenez); }
+            @Override public Rectangle obrazovkaPokladny() { return naTutorial(panelObrazovky); }
+
+            @Override public Rectangle terminal() {
+                for (InteraktivniZona zona : hotspoty) {
+                    if (zona.getNazev().equals("Platební terminál")) return naTutorial(zona);
+                }
+                return null;
+            }
+
+            @Override public Rectangle platidla() {
+                Rectangle spolecny = null;
+                for (InteraktivniZona zona : hotspoty) {
+                    if (!zona.getNazev().endsWith("Kč")) continue;
+                    Rectangle r = naTutorial(zona);
+                    if (r == null) continue;
+                    spolecny = (spolecny == null) ? r : spolecny.union(r);
+                }
+                return spolecny;
+            }
+
+            @Override public Rectangle polozkaNaPase() { return ohraniceniZPasu(false); }
+            @Override public Rectangle delitko() { return ohraniceniZPasu(true); }
+
+            @Override public void nastartujPas() {
+                spustSimulaci();
+                if (spravcePasu != null) spravcePasu.nastavVelikostNakupu(1);
+            }
+        };
+    }
+
+    private Rectangle naTutorial(Component c) {
+        if (c == null || tutorial == null || c.getParent() == null || !c.isVisible()) return null;
+        return SwingUtilities.convertRectangle(c.getParent(), c.getBounds(), tutorial);
+    }
+
+    private Rectangle ohraniceniZPasu(boolean delitko) {
+        if (spravcePasu == null || tutorial == null) return null;
+        Rectangle r = spravcePasu.ohraniceniNaPase(delitko);
+        return r == null ? null : SwingUtilities.convertRectangle(spravcePasu, r, tutorial);
+    }
+
+    public boolean potvrdTutorial() {
+        if (tutorial != null && tutorial.cekaNaPotvrzeni()) {
+            tutorial.potvrd();
+            return true;
         }
+        return false;
     }
     public List<Integer> getOdemceneZbozi(){
         return stav.getOdemceneZbozi();
@@ -453,14 +511,15 @@ public class PokladnaSimulator extends JPanel {
         }
 
         cekaNaPlatbu = true;
-        platbaKartou = Math.random() < 0.5;
+        Boolean vynucena = (tutorial != null) ? tutorial.vynucenaPlatbaKartou() : null;
+        platbaKartou = (vynucena != null) ? vynucena : Math.random() < 0.5;
         if (platbaKartou) {
             if (notifikacniBanner != null) {
                 notifikacniBanner.zobrazTrvale(NotifikacniBanner.Typ.PLATBA,
-                        "Platba kartou",
-                        "Zákazník platí " + cenaNakupu + " Kč  •  Klikni na Platební terminál");
+                        "Platba kartou", cenaNakupu + " Kč");
             }
             panelObrazovky.nastavStavPlatby(false, 0, 0);
+            if (tutorial != null) tutorial.platbaZahajena(true, cenaNakupu, 0);
         } else {
             int[] bankovky = {100, 200, 500, 1000, 2000, 5000};
             int dalZakanik = 0;
@@ -476,11 +535,11 @@ public class PokladnaSimulator extends JPanel {
             castkaVraceno = 0;
 
             if (notifikacniBanner != null) {
-                notifikacniBanner.zobrazTrvale(NotifikacniBanner.Typ.PLATBA,
-                        "Platba hotově",
-                        "Dal ti " + dalZakanik + " Kč  •  Vrátit: " + castkaVratit + " Kč");
+                notifikacniBanner.zobrazTrvale(NotifikacniBanner.Typ.PLATBA_HOTOVE,
+                        "Platba hotově", "vrátit " + castkaVratit + " Kč");
             }
             panelObrazovky.nastavStavPlatby(true, castkaVratit, castkaVraceno);
+            if (tutorial != null) tutorial.platbaZahajena(false, cenaNakupu, castkaVratit);
         }
     }
 
@@ -490,9 +549,6 @@ public class PokladnaSimulator extends JPanel {
         if (platbaKartou) {
             if (nazev.equals("Platební terminál")) {
                 if (notifikacniBanner != null) notifikacniBanner.skryj();
-                if (notifikacniBanner != null) {
-                    notifikacniBanner.zobraz(NotifikacniBanner.Typ.USPECH, "Platba kartou přijata!", "", 2000);
-                }
                 dokonciPlatbu(true);
             }
         } else {
@@ -537,6 +593,7 @@ public class PokladnaSimulator extends JPanel {
             panelVracenychPenez.vycistiHromadku();
         }
         if (uspesne) {
+            if (tutorial != null) tutorial.platbaDokoncena();
             SpravceZvuku.prehraj("mince");
             double spokojenost = (spravcePasu != null) ? spravcePasu.getPomerTrpelivosti() : 1.0;
 
@@ -562,14 +619,9 @@ public class PokladnaSimulator extends JPanel {
                 smenaLista.aktualizuj(stav.getCisloSmeny(), stav.getTrzbaSmeny(), stav.getCilSmeny());
             }
 
-            StringBuilder zprava = new StringBuilder();
-            zprava.append("Získáno ").append(penizeZaNakup).append(" Kč a ").append(xpZaNakup).append(" XP");
-            if (stav.getKomboSerie() >= 2) {
-                zprava.append(" (kombo x").append(stav.getKomboSerie()).append(")");
-            }
-            zprava.append(".");
+            String titulek = stav.getKomboSerie() >= 2 ? "Zaplaceno · kombo ×" + stav.getKomboSerie() : "Zaplaceno";
             if (notifikacniBanner != null) {
-                notifikacniBanner.zobraz(NotifikacniBanner.Typ.USPECH, "Nákup dokončen", zprava.toString(), 2500);
+                notifikacniBanner.zobraz(NotifikacniBanner.Typ.USPECH, titulek, "+" + penizeZaNakup + " Kč", 2000);
             }
 
             if (spokojenost < PRAH_NASTVANI) {
@@ -713,10 +765,12 @@ public class PokladnaSimulator extends JPanel {
     }
 
     public void pozastavHru() {
+        if (tutorial != null && !tutorial.pasSmiBezet()) return;
         if (spravcePasu != null) spravcePasu.pozastav();
     }
 
     public void obnovHru() {
+        if (tutorial != null && !tutorial.pasSmiBezet()) return;
         if (spravcePasu != null && stav.jeHraNactena()) spravcePasu.obnov();
     }
     public int getUrovenRychlostiPasu() {
@@ -767,6 +821,7 @@ public class PokladnaSimulator extends JPanel {
         }
     }
     public void resetujHerniPole() {
+        if (tutorial != null) tutorial.zrus();
         stav.setHraNactena(false);
         cekaNaPlatbu = false;
         platbaKartou = false;
@@ -799,7 +854,14 @@ public class PokladnaSimulator extends JPanel {
             panelVracenychPenez.vycistiHromadku();
         }
         stav.vynulujKombo();
+        if (tutorial != null) {
+            tutorial.zakaznikResetovan();
+            if (!tutorial.pasSmiBezet()) return;
+        }
         spustSimulaci();
+        if (tutorial != null && tutorial.jePrvniZakaznik() && spravcePasu != null) {
+            spravcePasu.nastavVelikostNakupu(1);
+        }
     }
     public boolean kupHudbu(String souborHudby, int cena) {
         StavHry.KoupeneHudby vysledek = stav.zkusKoupitHudbu(souborHudby, cena);

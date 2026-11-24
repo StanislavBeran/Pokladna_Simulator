@@ -75,7 +75,7 @@ public class NovaHraMenu extends JPanel {
                 SpravceZvuku.zastav("obchodak_theme_sound");
                 SpravceZvuku.prehraj("hra_hudba_v_pozadi", "obchod_theme", 0, true);
                 hlavniOkno.zobrazObrazovku("POKLADNA_SIMULATOR");
-                simulator.zobrazNavodANastartujHru();
+                simulator.zahajTutorial();
             } else {
                 JOptionPane.showMessageDialog(this, "Musíš zadat název!");
             }

@@ -15,6 +15,10 @@ public class InteraktivniZona extends JPanel {
 
     private PokladnaSimulator simulator;
 
+    public String getNazev() {
+        return nazev;
+    }
+
     public InteraktivniZona(int x, int y, int w, int h, String nazev, PokladnaSimulator simulator) {
         this(x, y, w, h, nazev, false, simulator);
     }

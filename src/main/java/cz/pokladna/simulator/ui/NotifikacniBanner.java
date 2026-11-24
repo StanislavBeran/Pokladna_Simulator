@@ -24,6 +24,7 @@ public class NotifikacniBanner extends JPanel {
         CHYBA,
         USPECH,
         PLATBA,
+        PLATBA_HOTOVE,
         NOVA_SMENA,
         INFO
     }
@@ -34,7 +35,6 @@ public class NotifikacniBanner extends JPanel {
 
     private static final Font FONT_IKONA       = new Font("Segoe UI Emoji", Font.PLAIN, 20);
     private static final Font FONT_TITULEK     = new Font("Segoe UI", Font.BOLD, 18);
-    private static final Font FONT_DETAIL      = new Font("Segoe UI", Font.PLAIN, 14);
     private static final Font FONT_TITULEK_STR = new Font("Segoe UI", Font.BOLD, 22);
     private static final Font FONT_DETAIL_STR  = new Font("Segoe UI", Font.PLAIN, 15);
 
@@ -257,62 +257,72 @@ public class NotifikacniBanner extends JPanel {
     }
 
     private void kresliPruh(Graphics2D g2) {
-        int bx = pokladnaX;
-        int by = pokladnaY - PRUH_VYSKA - PRUH_PADDING;
+        double m = Math.max(0.6, Math.min(1.8, pokladnaW / 420.0));
         int bw = pokladnaW;
-        int bh = PRUH_VYSKA;
+        int bh = (int) Math.round(PRUH_VYSKA * 0.9 * m);
+        int roh = (int) Math.round(ROH * m);
+        int bx = pokladnaX;
+        int by = Math.max(2, pokladnaY - bh - (int) Math.round(PRUH_PADDING * m));
+        int okraj = (int) Math.round(14 * m);
 
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.25f));
         g2.setColor(Color.BLACK);
-        g2.fillRoundRect(bx + 4, by + 5, bw, bh, ROH, ROH);
+        g2.fillRoundRect(bx + 3, by + 4, bw, bh, roh, roh);
 
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.96f));
         g2.setColor(bgColor);
-        g2.fillRoundRect(bx, by, bw, bh, ROH, ROH);
+        g2.fillRoundRect(bx, by, bw, bh, roh, roh);
 
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa * 0.25f));
         g2.setColor(Color.WHITE);
         g2.setStroke(new BasicStroke(1.5f));
-        g2.drawRoundRect(bx + 1, by + 1, bw - 2, bh - 2, ROH, ROH);
-
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alfa));
-        g2.setColor(bgColor.brighter().brighter());
-        g2.fillRoundRect(bx, by, 7, bh, ROH, ROH);
-        g2.fillRect(bx + 4, by, 3, bh);
+        g2.drawRoundRect(bx + 1, by + 1, bw - 2, bh - 2, roh, roh);
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
 
         int midY = by + bh / 2;
-        int curX = bx + 18;
+        int curX = bx + okraj;
+        int pravyOkraj = bx + bw - okraj;
+
+        float velikostHodnoty = (float) (18 * m);
+        Font fontHodnota = new Font("Segoe UI", Font.BOLD, 1).deriveFont(velikostHodnoty);
+        while (!text.isEmpty() && g2.getFontMetrics(fontHodnota).stringWidth(text) > bw * 0.45 && velikostHodnoty > 9f) {
+            velikostHodnoty -= 1f;
+            fontHodnota = fontHodnota.deriveFont(velikostHodnoty);
+        }
+        FontMetrics fmH = g2.getFontMetrics(fontHodnota);
+        int sirkaHodnoty = text.isEmpty() ? 0 : fmH.stringWidth(text);
 
         if (!ikona.isEmpty()) {
-            g2.setFont(FONT_IKONA);
-            FontMetrics fmI = g2.getFontMetrics();
-            g2.setColor(new Color(255, 255, 255, (int)(alfa * 230)));
-            g2.drawString(ikona, curX, midY + fmI.getAscent() / 2 - 3);
-            curX += fmI.stringWidth(ikona) + 10;
+            Font fontIkona = FONT_IKONA.deriveFont((float) (20 * m));
+            FontMetrics fmI = g2.getFontMetrics(fontIkona);
+            g2.setFont(fontIkona);
+            g2.setColor(new Color(255, 255, 255, (int) (alfa * 230)));
+            g2.drawString(ikona, curX, midY + (fmI.getAscent() - fmI.getDescent()) / 2);
+            curX += fmI.stringWidth(ikona) + (int) Math.round(8 * m);
         }
 
-        g2.setFont(FONT_TITULEK);
-        FontMetrics fmT = g2.getFontMetrics();
-        g2.setColor(new Color(0, 0, 0, (int)(alfa * 100)));
-        g2.drawString(titulek, curX + 1, midY + fmT.getAscent() / 2 - 2);
-        g2.setColor(new Color(255, 255, 255, (int)(alfa * 255)));
-        g2.drawString(titulek, curX, midY + fmT.getAscent() / 2 - 2);
+        int dostupne = pravyOkraj - curX - (sirkaHodnoty > 0 ? sirkaHodnoty + (int) Math.round(12 * m) : 0);
+        float velikostTitulku = (float) (17 * m);
+        Font fontTitulek = FONT_TITULEK.deriveFont(velikostTitulku);
+        while (g2.getFontMetrics(fontTitulek).stringWidth(titulek) > dostupne && velikostTitulku > 9f) {
+            velikostTitulku -= 1f;
+            fontTitulek = FONT_TITULEK.deriveFont(velikostTitulku);
+        }
+        FontMetrics fmT = g2.getFontMetrics(fontTitulek);
+        int titulekY = midY + (fmT.getAscent() - fmT.getDescent()) / 2;
+        g2.setFont(fontTitulek);
+        g2.setColor(new Color(0, 0, 0, (int) (alfa * 100)));
+        g2.drawString(titulek, curX + 1, titulekY + 1);
+        g2.setColor(new Color(255, 255, 255, (int) (alfa * 255)));
+        g2.drawString(titulek, curX, titulekY);
 
         if (!text.isEmpty()) {
-            curX += fmT.stringWidth(titulek) + 14;
-            g2.setColor(new Color(255, 255, 255, (int)(alfa * 70)));
-            g2.setStroke(new BasicStroke(1f));
-            g2.drawLine(curX - 7, by + 8, curX - 7, by + bh - 8);
-
-            g2.setFont(FONT_DETAIL);
-            FontMetrics fmD = g2.getFontMetrics();
-            g2.setColor(new Color(220, 220, 220, (int)(alfa * 220)));
-            String detailText = text;
-            int maxW = bw - (curX - bx) - 16;
-            while (fmD.stringWidth(detailText) > maxW && detailText.length() > 4) {
-                detailText = detailText.substring(0, detailText.length() - 4) + "...";
-            }
-            g2.drawString(detailText, curX, midY + fmD.getAscent() / 2 - 2);
+            int hodnotaY = midY + (fmH.getAscent() - fmH.getDescent()) / 2;
+            g2.setFont(fontHodnota);
+            g2.setColor(new Color(0, 0, 0, (int) (alfa * 100)));
+            g2.drawString(text, pravyOkraj - sirkaHodnoty + 1, hodnotaY + 1);
+            g2.setColor(new Color(255, 236, 170, (int) (alfa * 255)));
+            g2.drawString(text, pravyOkraj - sirkaHodnoty, hodnotaY);
         }
     }
 
@@ -345,7 +355,8 @@ public class NotifikacniBanner extends JPanel {
         switch (typ) {
             case CHYBA:      return new Color(185, 28, 28);
             case USPECH:     return new Color(22, 101, 52);
-            case PLATBA:     return new Color(140, 95, 5);
+            case PLATBA:     return new Color(40, 86, 170);
+            case PLATBA_HOTOVE: return new Color(140, 95, 5);
             case NOVA_SMENA: return new Color(29, 60, 140);
             case INFO:
             default:         return new Color(45, 45, 55);
@@ -357,6 +368,7 @@ public class NotifikacniBanner extends JPanel {
             case CHYBA:      return "⚠";
             case USPECH:     return "✓";
             case PLATBA:     return "💳";
+            case PLATBA_HOTOVE: return "💵";
             case NOVA_SMENA: return "🏪";
             case INFO:
             default:         return "ℹ";
